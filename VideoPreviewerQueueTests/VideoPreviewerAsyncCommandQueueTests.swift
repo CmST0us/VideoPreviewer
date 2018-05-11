@@ -42,6 +42,7 @@ class VideoPreviewerAsyncCommandQueueTests: XCTestCase {
     func productThreadRunLoop() {
         while !Thread.current.isCancelled {
             self.testQueue.startRunLoop(timeout: 2)
+            self.threadSafeTestQueue.startRunLoop(timeout: 2)
         }
         print("ProductThread End")
     }
@@ -54,7 +55,7 @@ class VideoPreviewerAsyncCommandQueueTests: XCTestCase {
 }
 
 
-// MARK: - Thread Unsafe Test Cases
+// MARK: - Single Thread Test Cases
 extension VideoPreviewerAsyncCommandQueueTests {
     func testSinglePush() {
         let command = VideoPreviewerAsyncCommand(withTag: nil) { (hint) in
@@ -71,9 +72,28 @@ extension VideoPreviewerAsyncCommandQueueTests {
         
         RunLoop.current.run(until: Date.init(timeIntervalSinceNow: 5))
     }
-    
-    func  testRemovePush() {
+
+}
+
+// MARK: - Multi Thread Safe Test Cases
+extension VideoPreviewerAsyncCommandQueueTests {
+    func testMultiPush() {
+        DispatchQueue.concurrentPerform(iterations: 100) { (i) in
+            let command = VideoPreviewerAsyncCommand(withTag: nil) { (hint) in
+                switch hint {
+                case .initial:
+                    print("initial")
+                case .needCancel:
+                    print("need cancel")
+                case .normal:
+                    
+                    print("normal\(String(i))")
+                }
+            }
+            self.threadSafeTestQueue.push(command, options: .fifo)
+        }
         
+        RunLoop.current.run(until: Date.init(timeIntervalSinceNow: 5))
     }
 }
 

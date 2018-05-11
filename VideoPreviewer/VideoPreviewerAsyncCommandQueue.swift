@@ -102,9 +102,9 @@ extension VideoPreviewerAsyncCommandQueue {
             return obj.runAfterDate == nil || obj.runAfterDate!.timeIntervalSinceNow <= 0
         }
         
-        runCommand.forEach { (index, obj) in
-            self.commandArray.remove(at: index)
-        }
+        let tmpArray = NSMutableArray.init(array: self.commandArray)
+        tmpArray.removeObjects(in: runCommand)
+        self.commandArray = tmpArray as! [VideoPreviewerAsyncCommand]
         
         if isThreadSafe {
             self.lock.unlock()
