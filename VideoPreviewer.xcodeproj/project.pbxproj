@@ -12,6 +12,10 @@
 		4FCBA97D20A5974E0073C605 /* VideoPreviewerAsyncCommandQueueTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FCBA97C20A5974E0073C605 /* VideoPreviewerAsyncCommandQueueTests.swift */; };
 		4FCBA97E20A597540073C605 /* VideoPreviewerAsyncCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FCBA97A20A57F950073C605 /* VideoPreviewerAsyncCommand.swift */; };
 		4FCBA97F20A597570073C605 /* VideoPreviewerAsyncCommandQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FCBA97820A57EA70073C605 /* VideoPreviewerAsyncCommandQueue.swift */; };
+		4FCBA98320A5D3E20073C605 /* VideoPreviewerParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FCBA98220A5D3E20073C605 /* VideoPreviewerParser.swift */; };
+		4FCBA98520A5D3F50073C605 /* VideoPreviewerH264Parser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FCBA98420A5D3F50073C605 /* VideoPreviewerH264Parser.swift */; };
+		4FCBA98720A5D52C0073C605 /* VideoFrame.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FCBA98620A5D52C0073C605 /* VideoFrame.swift */; };
+		4FCBA98A20A5DE410073C605 /* VideoFrameTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FCBA98920A5DE410073C605 /* VideoFrameTests.swift */; };
 		4FF66F4120A57A0F0083DB0A /* VideoPreviewer.h in Headers */ = {isa = PBXBuildFile; fileRef = 4FF66F3F20A57A0F0083DB0A /* VideoPreviewer.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		4FF66F5320A57A690083DB0A /* VideoPreviewerQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FF66F4F20A57A690083DB0A /* VideoPreviewerQueue.swift */; };
 		4FF66F5420A57A690083DB0A /* Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FF66F5020A57A690083DB0A /* Utils.swift */; };
@@ -35,6 +39,10 @@
 		4FCBA97820A57EA70073C605 /* VideoPreviewerAsyncCommandQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoPreviewerAsyncCommandQueue.swift; sourceTree = "<group>"; };
 		4FCBA97A20A57F950073C605 /* VideoPreviewerAsyncCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoPreviewerAsyncCommand.swift; sourceTree = "<group>"; };
 		4FCBA97C20A5974E0073C605 /* VideoPreviewerAsyncCommandQueueTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoPreviewerAsyncCommandQueueTests.swift; sourceTree = "<group>"; };
+		4FCBA98220A5D3E20073C605 /* VideoPreviewerParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoPreviewerParser.swift; sourceTree = "<group>"; };
+		4FCBA98420A5D3F50073C605 /* VideoPreviewerH264Parser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoPreviewerH264Parser.swift; sourceTree = "<group>"; };
+		4FCBA98620A5D52C0073C605 /* VideoFrame.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoFrame.swift; sourceTree = "<group>"; };
+		4FCBA98920A5DE410073C605 /* VideoFrameTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoFrameTests.swift; sourceTree = "<group>"; };
 		4FF66F3C20A57A0F0083DB0A /* VideoPreviewer.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = VideoPreviewer.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		4FF66F3F20A57A0F0083DB0A /* VideoPreviewer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = VideoPreviewer.h; sourceTree = "<group>"; };
 		4FF66F4020A57A0F0083DB0A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -66,6 +74,16 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		4FCBA98120A5D3AA0073C605 /* Parser */ = {
+			isa = PBXGroup;
+			children = (
+				4FCBA98220A5D3E20073C605 /* VideoPreviewerParser.swift */,
+				4FCBA98420A5D3F50073C605 /* VideoPreviewerH264Parser.swift */,
+				4FCBA98620A5D52C0073C605 /* VideoFrame.swift */,
+			);
+			path = Parser;
+			sourceTree = "<group>";
+		};
 		4FF66F3220A57A0F0083DB0A = {
 			isa = PBXGroup;
 			children = (
@@ -87,6 +105,7 @@
 		4FF66F3E20A57A0F0083DB0A /* VideoPreviewer */ = {
 			isa = PBXGroup;
 			children = (
+				4FCBA98120A5D3AA0073C605 /* Parser */,
 				4FF66F5220A57A690083DB0A /* MovieGLView.swift */,
 				4FF66F5020A57A690083DB0A /* Utils.swift */,
 				4FF66F5120A57A690083DB0A /* VideoPreviewer.swift */,
@@ -112,6 +131,7 @@
 			children = (
 				4FF66F5E20A57A930083DB0A /* VideoPreviewerQueueTests.swift */,
 				4FCBA97C20A5974E0073C605 /* VideoPreviewerAsyncCommandQueueTests.swift */,
+				4FCBA98920A5DE410073C605 /* VideoFrameTests.swift */,
 				4FF66F6020A57A930083DB0A /* Info.plist */,
 			);
 			path = VideoPreviewerQueueTests;
@@ -226,9 +246,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4FCBA98320A5D3E20073C605 /* VideoPreviewerParser.swift in Sources */,
 				4FF66F5320A57A690083DB0A /* VideoPreviewerQueue.swift in Sources */,
 				4FCBA97920A57EA70073C605 /* VideoPreviewerAsyncCommandQueue.swift in Sources */,
+				4FCBA98520A5D3F50073C605 /* VideoPreviewerH264Parser.swift in Sources */,
 				4FCBA97B20A57F950073C605 /* VideoPreviewerAsyncCommand.swift in Sources */,
+				4FCBA98720A5D52C0073C605 /* VideoFrame.swift in Sources */,
 				4FF66F5620A57A690083DB0A /* MovieGLView.swift in Sources */,
 				4FF66F5420A57A690083DB0A /* Utils.swift in Sources */,
 			);
@@ -243,6 +266,7 @@
 				4FCBA97D20A5974E0073C605 /* VideoPreviewerAsyncCommandQueueTests.swift in Sources */,
 				4FF66F6920A57B5E0083DB0A /* VideoPreviewerQueue.swift in Sources */,
 				4FCBA97F20A597570073C605 /* VideoPreviewerAsyncCommandQueue.swift in Sources */,
+				4FCBA98A20A5DE410073C605 /* VideoFrameTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -398,6 +422,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.eric3u.VideoPreviewer;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 4.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -425,6 +450,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.eric3u.VideoPreviewer;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "";
 				SWIFT_VERSION = 4.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
