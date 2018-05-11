@@ -1,6 +1,6 @@
 //
-//  ViewPreviewerQueueTests.swift
-//  ViewPreviewerQueueTests
+//  VideoPreviewerQueueTests.swift
+//  VideoPreviewerQueueTests
 //
 //  Created by CmST0us on 2018/5/10.
 //  Copyright © 2018年 eric3u. All rights reserved.
@@ -8,7 +8,7 @@
 
 import XCTest
 
-class ViewPreviewerQueueTests: XCTestCase {
+class VideoPreviewerQueueTests: XCTestCase {
     
     var testQueue: VideoPreviewerQueue!
     
@@ -74,7 +74,7 @@ class ViewPreviewerQueueTests: XCTestCase {
 
 
 // MARK: - Single Thread Test Cases
-extension ViewPreviewerQueueTests {
+extension VideoPreviewerQueueTests {
     
     func testSinglePushAndPull() {
         let _ = pushOne()
@@ -100,5 +100,12 @@ extension ViewPreviewerQueueTests {
             let _ = pushOne()
             print("\(String(i))")
         }
+    }
+}
+
+// MARK: - MultiThreadThread
+extension VideoPreviewerQueueTests {
+    func testMultiThread() {
+        self
     }
 }
