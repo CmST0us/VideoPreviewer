@@ -39,18 +39,21 @@ class VideoPreviewerQueueTests: XCTestCase {
     func productRunLoop() {
         
         while !Thread.current.isCancelled {
-            RunLoop.current.run(until: Date.init(timeIntervalSinceNow: 1.0))
-            print("Product RunLoop End")
+            let b = self.pushOne()
+            Thread.sleep(forTimeInterval: 0.5)
+            print("push---->\(String(b))")
         }
+        print("Product RunLoop End")
     }
     
     @objc
     func consumerRunLoop() {
         
         while !Thread.current.isCancelled {
-            RunLoop.current.run(until: Date.init(timeIntervalSinceNow: 1.0))
-            print("Consumer RunLoop End")
+            let b = self.pullOne()
+            print("pull---->\(String(b.debugDescription))")
         }
+        print("Consumer RunLoop End")
         
     }
     
@@ -106,6 +109,12 @@ extension VideoPreviewerQueueTests {
 // MARK: - MultiThreadThread
 extension VideoPreviewerQueueTests {
     func testMultiThread() {
-        self
+        self.consumerThread.start()
+        self.productThread.start()
+        
+        RunLoop.current.run(until: Date.init(timeIntervalSinceNow: 10))
+        
+        self.consumerThread.cancel()
+        self.productThread.cancel()
     }
 }

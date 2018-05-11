@@ -8,7 +8,7 @@
 
 import Foundation
 
-enum VideoPreviewQueueError: Error {
+public enum VideoPreviewQueueError: Error {
     case wrongSizeInput
 }
 
@@ -59,18 +59,6 @@ public class VideoPreviewerQueue {
         self.tail = 0
         
         self.lock = NSCondition()
-        
-        // Alloc Memory For Node
-        /*
-        let allocatedMemoryPtr = UnsafeMutableRawPointer.allocate(
-            byteCount: self.size * MemoryLayout<VideoPreviewerQueueLinkNodeBufferPointer>.stride,
-            alignment: MemoryLayout<VideoPreviewerQueueLinkNodeBufferPointer>.alignment)
-
-        let defaultNode = VideoPreviewerQueueLinkNode()
-        self.node = allocatedMemoryPtr.initializeMemory(as: VideoPreviewerQueueLinkNode.self, repeating: defaultNode, count: self.count)
-         
-         这个方法有问题<-Re：类型错了MemoryLayout<VideoPreviewerQueueLinkNode>才是
-         */
         let allocatedMemoryPtr = VideoPreviewerQueueLinkNodeBufferPointer.allocate(capacity: self.size)
         let defaultNode = VideoPreviewerQueueLinkNode()
         allocatedMemoryPtr.initialize(repeating: defaultNode)

@@ -7,6 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4FCBA97920A57EA70073C605 /* VideoPreviewerAsyncCommandQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FCBA97820A57EA70073C605 /* VideoPreviewerAsyncCommandQueue.swift */; };
+		4FCBA97B20A57F950073C605 /* VideoPreviewerAsyncCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FCBA97A20A57F950073C605 /* VideoPreviewerAsyncCommand.swift */; };
+		4FCBA97D20A5974E0073C605 /* VideoPreviewerAsyncCommandQueueTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FCBA97C20A5974E0073C605 /* VideoPreviewerAsyncCommandQueueTests.swift */; };
+		4FCBA97E20A597540073C605 /* VideoPreviewerAsyncCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FCBA97A20A57F950073C605 /* VideoPreviewerAsyncCommand.swift */; };
+		4FCBA97F20A597570073C605 /* VideoPreviewerAsyncCommandQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FCBA97820A57EA70073C605 /* VideoPreviewerAsyncCommandQueue.swift */; };
 		4FF66F4120A57A0F0083DB0A /* VideoPreviewer.h in Headers */ = {isa = PBXBuildFile; fileRef = 4FF66F3F20A57A0F0083DB0A /* VideoPreviewer.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		4FF66F5320A57A690083DB0A /* VideoPreviewerQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FF66F4F20A57A690083DB0A /* VideoPreviewerQueue.swift */; };
 		4FF66F5420A57A690083DB0A /* Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FF66F5020A57A690083DB0A /* Utils.swift */; };
@@ -27,6 +32,9 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		4FCBA97820A57EA70073C605 /* VideoPreviewerAsyncCommandQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoPreviewerAsyncCommandQueue.swift; sourceTree = "<group>"; };
+		4FCBA97A20A57F950073C605 /* VideoPreviewerAsyncCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoPreviewerAsyncCommand.swift; sourceTree = "<group>"; };
+		4FCBA97C20A5974E0073C605 /* VideoPreviewerAsyncCommandQueueTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoPreviewerAsyncCommandQueueTests.swift; sourceTree = "<group>"; };
 		4FF66F3C20A57A0F0083DB0A /* VideoPreviewer.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = VideoPreviewer.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		4FF66F3F20A57A0F0083DB0A /* VideoPreviewer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = VideoPreviewer.h; sourceTree = "<group>"; };
 		4FF66F4020A57A0F0083DB0A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -83,6 +91,8 @@
 				4FF66F5020A57A690083DB0A /* Utils.swift */,
 				4FF66F5120A57A690083DB0A /* VideoPreviewer.swift */,
 				4FF66F4F20A57A690083DB0A /* VideoPreviewerQueue.swift */,
+				4FCBA97820A57EA70073C605 /* VideoPreviewerAsyncCommandQueue.swift */,
+				4FCBA97A20A57F950073C605 /* VideoPreviewerAsyncCommand.swift */,
 				4FF66F5720A57A760083DB0A /* Support File */,
 			);
 			path = VideoPreviewer;
@@ -101,6 +111,7 @@
 			isa = PBXGroup;
 			children = (
 				4FF66F5E20A57A930083DB0A /* VideoPreviewerQueueTests.swift */,
+				4FCBA97C20A5974E0073C605 /* VideoPreviewerAsyncCommandQueueTests.swift */,
 				4FF66F6020A57A930083DB0A /* Info.plist */,
 			);
 			path = VideoPreviewerQueueTests;
@@ -216,6 +227,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				4FF66F5320A57A690083DB0A /* VideoPreviewerQueue.swift in Sources */,
+				4FCBA97920A57EA70073C605 /* VideoPreviewerAsyncCommandQueue.swift in Sources */,
+				4FCBA97B20A57F950073C605 /* VideoPreviewerAsyncCommand.swift in Sources */,
 				4FF66F5620A57A690083DB0A /* MovieGLView.swift in Sources */,
 				4FF66F5420A57A690083DB0A /* Utils.swift in Sources */,
 			);
@@ -226,7 +239,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				4FF66F5F20A57A930083DB0A /* VideoPreviewerQueueTests.swift in Sources */,
+				4FCBA97E20A597540073C605 /* VideoPreviewerAsyncCommand.swift in Sources */,
+				4FCBA97D20A5974E0073C605 /* VideoPreviewerAsyncCommandQueueTests.swift in Sources */,
 				4FF66F6920A57B5E0083DB0A /* VideoPreviewerQueue.swift in Sources */,
+				4FCBA97F20A597570073C605 /* VideoPreviewerAsyncCommandQueue.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
