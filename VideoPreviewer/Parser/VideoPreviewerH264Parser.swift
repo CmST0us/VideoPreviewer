@@ -7,7 +7,11 @@
 //
 
 import Foundation
+import ffmpeg.avformat
+import ffmpeg.swscale
 
 open class VideoPreviewerH264Parser: VideoPreviewerParser {
-    
+    init() {
+        
+    }
 }

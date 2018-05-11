@@ -8,6 +8,6 @@
 
 import Foundation
 
-protocol VideoPreviewerParser {
+public protocol VideoPreviewerParser {
     
 }

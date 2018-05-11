@@ -1,0 +1,10 @@
+module ffmpeg {
+    module avformat {
+        header "include/libavformat/avformat.h"
+        export *
+    }
+    module swscale {
+        header "include/libswscale/swscale.h"
+        export *
+    }
+}

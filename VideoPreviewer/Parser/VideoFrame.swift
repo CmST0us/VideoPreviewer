@@ -39,6 +39,8 @@ public struct VideoFrame {
     public struct BasicInfo {
         public struct H264 {
             
+            //https://developer.apple.com/library/content/documentation/Swift/Conceptual/BuildingCocoaApps/InteractingWithCAPIs.html#//apple_ref/doc/uid/TP40014216-CH8-ID17
+            // [TODO] Union 的导入注意一下
             public struct FrameFlag: OptionSet {
                 public var rawValue: UInt32
                 
