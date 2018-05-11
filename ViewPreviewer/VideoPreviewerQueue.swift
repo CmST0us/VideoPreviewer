@@ -69,7 +69,7 @@ public class VideoPreviewerQueue {
         let defaultNode = VideoPreviewerQueueLinkNode()
         self.node = allocatedMemoryPtr.initializeMemory(as: VideoPreviewerQueueLinkNode.self, repeating: defaultNode, count: self.count)
          
-         这个方法有问题
+         这个方法有问题<-Re：类型错了MemoryLayout<VideoPreviewerQueueLinkNode>才是
          */
         let allocatedMemoryPtr = VideoPreviewerQueueLinkNodeBufferPointer.allocate(capacity: self.size)
         let defaultNode = VideoPreviewerQueueLinkNode()
