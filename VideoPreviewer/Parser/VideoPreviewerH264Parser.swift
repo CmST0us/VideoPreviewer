@@ -9,7 +9,12 @@
 import Foundation
 import ffmpeg
 
-open class VideoPreviewerH264Parser: VideoPreviewerParser {
+public protocol VideoPreviewerH264ParserDelegate {
+    func parser(_ parser: VideoPreviewerH264Parser, didParseFrame frame: VideoFrame.H264)
+}
+
+open class VideoPreviewerH264Parser {
+    
     // MARK: - Public Member
     /// 精确的帧率
     public var frameRate: Int {
@@ -51,7 +56,7 @@ open class VideoPreviewerH264Parser: VideoPreviewerParser {
     
     public var shouldVerifyVideoStream: Bool
     
-    public var delegate: VideoPreviewerParserDelegate?
+    public var delegate: VideoPreviewerH264ParserDelegate?
     
     // MARK: - Internal Member
     private var frameUUIDCounter: UInt32 = 0

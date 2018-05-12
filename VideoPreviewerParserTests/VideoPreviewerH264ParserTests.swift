@@ -40,7 +40,7 @@ extension VideoPreviewerH264ParserTests {
 
 
 // MARK: - H264Parser Parser Tests
-extension VideoPreviewerH264ParserTests: VideoPreviewerParserDelegate {
+extension VideoPreviewerH264ParserTests: VideoPreviewerH264ParserDelegate {
     
     func testParserParserVideoTest() {
         self.parser = VideoPreviewerH264Parser()
@@ -52,7 +52,7 @@ extension VideoPreviewerH264ParserTests: VideoPreviewerParserDelegate {
         self.parser.parser(mutablePtr, usedLength: &uselen)
     }
     
-    func parser(_ parser: VideoPreviewerParser, didParseFrame frame: VideoFrame.H264) {
+    func parser(_ parser: VideoPreviewerH264Parser, didParseFrame frame: VideoFrame.H264) {
         let outputMessage = """
 Frame \(String(frame.frameInfo.frameIndex)) fps: \(String(parser.frameRate)) :
         \(String(parser.outputWidth)) x \(String(parser.outputHeight)) \(String(frame.frameSize)) Byte
