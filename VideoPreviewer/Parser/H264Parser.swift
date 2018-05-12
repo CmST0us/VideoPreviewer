@@ -59,13 +59,17 @@ open class H264Parser {
     public var delegate: H264ParserDelegate?
     
     // MARK: - Internal Member
-    private var frameUUIDCounter: UInt32 = 0
     typealias AVCodecContextPtr = UnsafeMutablePointer<AVCodecContext>
     typealias AVCodecParserContextPtr = UnsafeMutablePointer<AVCodecParserContext>
-    private var codecContext: AVCodecContextPtr!
-    private var codecParserContext: AVCodecParserContextPtr!
-    private var parserLock: NSLock
+    typealias AVCodecPtr = UnsafeMutablePointer<AVCodec>
     
+    var codecContext: AVCodecContextPtr!
+    var codecParserContext: AVCodecParserContextPtr!
+    var codec: AVCodecPtr!
+    
+    // MARK: - Private Member
+    private var frameUUIDCounter: UInt32 = 0
+    private var parserLock: NSLock
     
     // MARK: - Inital And Deinital Method
     public init() {
@@ -89,19 +93,21 @@ extension H264Parser {
         
         // 创建 ffmpeg parser
         av_register_all()
-        let pCodec = avcodec_find_decoder(AV_CODEC_ID_H264)
-        assert(pCodec != nil, "can not find decoder")
-        self.codecContext = avcodec_alloc_context3(UnsafePointer(pCodec!))
+        
+        self.codec = avcodec_find_decoder(AV_CODEC_ID_H264)
+        assert(self.codec != nil, "can not find decoder")
+        self.codecContext = avcodec_alloc_context3(UnsafePointer(self.codec))
         self.codecParserContext = av_parser_init(Int32(AV_CODEC_ID_H264.rawValue))
-        
-        // 配置解码器上下文
-        
         
         self.parserLock.unlock()
     }
     
     public func free() {
         self.parserLock.lock()
+        
+        if self.codec != nil {
+            av_freep(&self.codec)
+        }
         
         if self.codecContext != nil {
             
@@ -125,7 +131,7 @@ extension H264Parser {
         self.initial()
     }
     
-    public func parser(_ data: UnsafeMutableRawBufferPointer, usedLength: inout Int) {
+    public func parse(_ data: UnsafeMutableRawBufferPointer, usedLength: inout Int) {
         
         if self.codecContext == nil {
             usedLength = 0
@@ -138,7 +144,10 @@ extension H264Parser {
         var parserLen: Int32 = 0
         usedLength = 0
         
-        var buf = data.bindMemory(to: UInt8.self).baseAddress!
+        let bufAddress = UnsafeMutableRawBufferPointer.allocate(byteCount: data.count + Int(FF_INPUT_BUFFER_PADDING_SIZE), alignment: MemoryLayout<UInt8>.alignment)
+        bufAddress.copyMemory(from: UnsafeRawBufferPointer.init(data))
+        var feedBuf = bufAddress.bindMemory(to: UInt8.self).baseAddress!
+        
         var outputFrame: VideoFrame.H264?
         
         while dataLength > 0 {
@@ -154,7 +163,7 @@ extension H264Parser {
                 self.codecContext,
                 &(packetData),
                 &(packetSize),
-                buf,
+                feedBuf,
                 dataLength,
                 AV_NOPTS_VALUE,
                 AV_NOPTS_VALUE,
@@ -165,7 +174,7 @@ extension H264Parser {
             packet.size = packetSize
             
             dataLength -= parserLen
-            buf = buf.advanced(by: Int(parserLen))
+            feedBuf = feedBuf.advanced(by: Int(parserLen))
             
             usedLength += Int(parserLen)
             
@@ -236,6 +245,7 @@ extension H264Parser {
             
         }
         
+        bufAddress.deallocate()
         self.parserLock.unlock()
     }
     
