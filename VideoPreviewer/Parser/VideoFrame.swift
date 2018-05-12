@@ -8,6 +8,9 @@
 
 import Foundation
 
+public let AV_NOPTS_VALUE = 0x8000_0000_0000_0000 as UInt64
+public let H264_FRAME_INVAILED_UUID = 0
+
 public struct VideoFrame {
     
     /// The live stream is rotated 90 degrees cw. VideoPreviewer will rotate 90 degrees ccw when render it to screen.
@@ -23,16 +26,11 @@ public struct VideoFrame {
         case cw270
     }
     
-    public enum TypeTag {
+    public enum TypeTag: UInt8 {
         
-        public enum VideoFrame: UInt8 {
-            case h264Raw = 0
-            case jpeg = 2
-        }
-        
-        public enum AudioFrame: UInt8 {
-            case aacRaw = 1
-        }
+        case videoFrameH264Raw = 0
+        case audioFrameAACRaw = 1
+        case videoFrameJPEG = 2
         
     }
     
@@ -41,47 +39,31 @@ public struct VideoFrame {
             
             //https://developer.apple.com/library/content/documentation/Swift/Conceptual/BuildingCocoaApps/InteractingWithCAPIs.html#//apple_ref/doc/uid/TP40014216-CH8-ID17
             // [TODO] Union 的导入注意一下
-            public struct FrameFlag: OptionSet {
-                public var rawValue: UInt32
+            public struct FrameFlag {
+                var hasSPS: Bool = false
+                var hasPPS: Bool = false
+                var hasIDR: Bool = false
+                var isFullRange: Bool = false
+                var ignoreRender: Bool = true
+                var incompleteFrameFlag: Bool = true
+                var reserved: Int32 = 0
                 
-                public init(rawValue: UInt32) {
-                    self.rawValue = rawValue
-                }
-                
-                static let SPS = FrameFlag(rawValue: 1 << 32)
-                static let PPS = FrameFlag(rawValue: 1 << 31)
-                static let IDR = FrameFlag(rawValue: 1 << 30)
-                static let fullRange = FrameFlag(rawValue: 1 << 29)
-                static let ignoreRender = FrameFlag(rawValue: 1 << 28)
-                static let incomplete = FrameFlag(rawValue: 1 << 27)
-                
-                var SPS: Bool {
-                    return FrameFlag.SPS.rawValue & self.rawValue > 0
-                }
-                
-                var PPS: Bool {
-                    return FrameFlag.PPS.rawValue & self.rawValue > 0
-                }
-                
-                var IDR: Bool {
-                    return FrameFlag.IDR.rawValue & self.rawValue > 0
-                }
-                
-                // [TODO]
+//                channelType
             }
             
-            var width: UInt16
-            var height: UInt16
+            var width: Int32 = 0
+            var height: Int32 = 0
             
-            var fps: UInt16
-            var rotate: RotationType
-            var reserved: UInt8
+            var fps: UInt16 = 0
+            var rotate: RotationType = .default
+            var reserved: UInt8 = 0
             
-            var frameIndex: UInt16
-            var maxFrameIndexPlusOne: UInt16
+            var frameIndex: Int32 = 0
+            var maxFrameIndexPlusOne: Int32 = 0
             
-            var frameFlag: FrameFlag
-            var mediaMsTime: UInt32
+            var frameFlag: FrameFlag = FrameFlag()
+            var framePoc: Int32 = 0
+            var mediaMsTime: UInt32 = 0
         }
         
         public struct AAC {
@@ -90,11 +72,11 @@ public struct VideoFrame {
     }
     
     public struct H264 {
-        var typeTag: TypeTag
-        var frameSize: UInt32
-        var frameUUID: UInt32
-        var timeTag: UInt64
-        var basicInfo: BasicInfo.H264
+        var typeTag: TypeTag = .videoFrameH264Raw
+        var frameSize: UInt32 = 0
+        var frameUUID: UInt32 = 0
+        var timeTag: UInt64 = 0
+        var frameInfo: BasicInfo.H264 = BasicInfo.H264()
         var frameData: UnsafeRawPointer?
     }
 
