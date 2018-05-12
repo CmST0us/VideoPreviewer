@@ -40,18 +40,23 @@ extension VideoPreviewerH264ParserTests {
 
 
 // MARK: - H264Parser Parser Tests
-extension VideoPreviewerH264ParserTests {
+extension VideoPreviewerH264ParserTests: VideoPreviewerParserDelegate {
     
     func testParserParserVideoTest() {
         self.parser = VideoPreviewerH264Parser()
+        self.parser.delegate = self
         self.parser.initial()
         let data = NSData.init(contentsOfFile: "/Users/cmst0us/Desktop/test.h264")!
         let mutablePtr = UnsafeMutableRawBufferPointer.init(start: UnsafeMutableRawPointer(mutating: data.bytes), count: data.length)
         var uselen: Int = 0
-        let res = self.parser.parser(mutablePtr, usedLength: &uselen)
-        let w = res?.frameInfo.width
-        let h = res?.frameInfo.height
-        
-        
+        self.parser.parser(mutablePtr, usedLength: &uselen)
+    }
+    
+    func parser(_ parser: VideoPreviewerParser, didParseFrame frame: VideoFrame.H264) {
+        let outputMessage = """
+Frame \(String(frame.frameInfo.frameIndex)) fps: \(String(parser.frameRate)) :
+        \(String(parser.outputWidth)) x \(String(parser.outputHeight)) \(String(frame.frameSize)) Byte
+"""
+        print(outputMessage)
     }
 }

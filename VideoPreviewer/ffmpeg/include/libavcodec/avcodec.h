@@ -4409,8 +4409,9 @@ int av_parser_parse2(AVCodecParserContext *s,
                      AVCodecContext *avctx,
                      uint8_t **poutbuf, int *poutbuf_size,
                      const uint8_t *buf, int buf_size,
-                     int64_t pts, int64_t dts,
-                     int64_t pos);
+                     // modfiy for swift
+                     uint64_t pts, uint64_t dts,
+                     uint64_t pos);
 
 /**
  * @return 0 if the output buffer is a subset of the input, 1 if it is allocated and must be freed

@@ -11,24 +11,47 @@ import ffmpeg
 
 open class VideoPreviewerH264Parser: VideoPreviewerParser {
     // MARK: - Public Member
-    // DJI Product used
-//    public var usingDJIAircraftEncoder: Bool
-    
     /// 精确的帧率
-    public private(set) var frameRate: Int!
+    public var frameRate: Int {
+        if self.frameInterval != 0 {
+            return Int(ceil(1.0 / self.frameInterval))
+        }
+        return 0
+    }
+    
+    /// 帧间时间间隔
+    public var frameInterval: TimeInterval {
+        if self.codecParserContext != nil {
+            if self.codecParserContext.pointee.frame_rate_num > 0 && self.codecParserContext.pointee.frame_rate_den > 0 {
+                return TimeInterval(self.codecParserContext.pointee.frame_rate_den) / TimeInterval(self.codecParserContext.pointee.frame_rate_num)
+            }
+        }
+        
+        return 0
+    }
     
     /// 从上一次重置后的帧数计数
     public private(set) var frameCounter: UInt32!
     
     /// 输出视频的宽
-    public var outputWidth: Int!
+    public var outputWidth: Int {
+        if self.codecParserContext != nil {
+            return Int(self.codecParserContext.pointee.width_in_pixel)
+        }
+        return 0
+    }
     /// 输出视频的高
-    public var outputHeight: Int!
+    public var outputHeight: Int {
+        if self.codecParserContext != nil {
+            return Int(self.codecParserContext.pointee.height_in_pixel)
+        }
+        return 0
+    }
     
-    public var shouldVerifyVideoStream: Bool!
     
-    /// 帧间时间间隔
-    public private(set) var frameInterval: TimeInterval!
+    public var shouldVerifyVideoStream: Bool
+    
+    public var delegate: VideoPreviewerParserDelegate?
     
     // MARK: - Internal Member
     private var frameUUIDCounter: UInt32 = 0
@@ -42,6 +65,7 @@ open class VideoPreviewerH264Parser: VideoPreviewerParser {
     // MARK: - Inital And Deinital Method
     public init() {
         self.parserLock = NSLock()
+        self.shouldVerifyVideoStream = true
         self.initial()
     }
     
@@ -55,12 +79,8 @@ extension VideoPreviewerH264Parser {
     public func initial() {
         self.parserLock.lock()
         
-        self.frameRate = 0
-        self.frameInterval = 0
         self.frameCounter = 0
         self.frameUUIDCounter = 0
-        self.outputWidth = 0
-        self.outputHeight = 0
         
         // 创建 ffmpeg parser
         av_register_all()
@@ -97,29 +117,29 @@ extension VideoPreviewerH264Parser {
         self.initial()
     }
     
-    public func parser(_ data: UnsafeMutableRawBufferPointer, usedLength: inout Int) -> VideoFrame.H264? {
+    public func parser(_ data: UnsafeMutableRawBufferPointer, usedLength: inout Int) {
         
         if self.codecContext == nil {
             usedLength = 0
-            return nil
+            return
         }
         
         self.parserLock.lock()
         
-        var parserInLength = Int32(data.count)
+        var dataLength = Int32(data.count)
         var parserLen: Int32 = 0
         usedLength = 0
         
         var buf = data.bindMemory(to: UInt8.self).baseAddress!
         var outputFrame: VideoFrame.H264?
         
-        while parserInLength > 0 {
+        while dataLength > 0 {
             
-            var packet: AVPacket?
-            av_init_packet(&packet!)
+            var packet: AVPacket = AVPacket()
+            av_init_packet(&packet)
 
-            var packetData = packet!.data
-            var packetSize = packet!.size
+            var packetData = packet.data
+            var packetSize = packet.size
             
             parserLen = av_parser_parse2(
                 self.codecParserContext,
@@ -127,17 +147,22 @@ extension VideoPreviewerH264Parser {
                 &(packetData),
                 &(packetSize),
                 buf,
-                parserInLength,
-                Int64(AV_NOPTS_VALUE),
-                Int64(AV_NOPTS_VALUE),
-                Int64(AV_NOPTS_VALUE))
+                dataLength,
+                AV_NOPTS_VALUE,
+                AV_NOPTS_VALUE,
+                AV_NOPTS_VALUE)
             
-            parserInLength -= parserLen
+            // c 函数通过指针访问Swift的结构体时，由于函数没有标记mutable，所以只有只读访问权限
+            // 讲获取到的变量赋值给packet
+            packet.size = packetSize
+            
+            dataLength -= parserLen
             buf = buf.advanced(by: Int(parserLen))
             
             usedLength += Int(parserLen)
             
-            if packet!.size > 0 {
+            if packet.size > 0 {
+                // 解码NAL
                 var isSpsPpsFound = false
                 
                 // [TODO] hack code??
@@ -145,27 +170,13 @@ extension VideoPreviewerH264Parser {
                     self.codecParserContext.pointee.height_in_pixel = 1080
                 }
                 
-                // [TODO] 可以使用计算属性
-                // 取出帧的宽高
-                self.outputWidth = Int(self.codecParserContext.pointee.width_in_pixel)
-                self.outputHeight = Int(self.codecParserContext.pointee.height_in_pixel)
+                // 取出帧的宽高, 改为计算属性
+                // [TODO] 468 × 212， 这是原视频的尺寸，上面那个hack估计是为了解决这个问题，ffmpeg命令行用码流创建后可以恢复468 x 212
                 
                 // 判断是否找到SOS或PPS帧
                 isSpsPpsFound = self.codecParserContext.pointee.frame_has_pps > 0
                 
-                // 计算帧率
-                if self.codecParserContext.pointee.frame_rate_den > 0 && self.codecParserContext.pointee.frame_rate_num > 0 {
-                    
-                    // using by DJI Encoder
-//                    var scale = self.usingAJIAircraftEncoder ? 2.0 : 1.0
-                    
-                    self.frameInterval = Double(self.codecParserContext.pointee.frame_rate_den) / Double(self.codecParserContext.pointee.frame_rate_num)
-                    self.frameRate = Int(ceil(1.0 / self.frameInterval))
-                    
-                } else {
-                    self.frameRate = 0
-                    self.frameInterval = 0
-                }
+                // 计算帧率，改为计算属性
                 
                 // 标记没有sps和pps的帧需要校验
                 if self.shouldVerifyVideoStream {
@@ -176,15 +187,14 @@ extension VideoPreviewerH264Parser {
                     }
                 }
                 
-                
+                /// 构建outputFrame
+                let pc = self.codecParserContext!
                 let _ = self.popNextFrameUUID()
                 outputFrame = VideoFrame.H264()
                 outputFrame!.typeTag = .videoFrameH264Raw
                 outputFrame!.frameUUID = self.frameUUIDCounter
-                outputFrame!.frameSize = UInt32(packet!.size)
+                outputFrame!.frameSize = UInt32(packet.size)
             
-                /// 构建outputFrame
-                let pc = self.codecParserContext!
                 outputFrame!.frameInfo.frameIndex = pc.pointee.frame_num
                 outputFrame!.frameInfo.maxFrameIndexPlusOne = pc.pointee.max_frame_num_plus1
                 
@@ -207,19 +217,18 @@ extension VideoPreviewerH264Parser {
                 
             }
             // 释放资源
-            av_free_packet(&packet!)
+            av_free_packet(&packet)
             
             if outputFrame != nil {
-                break
+                self.frameCounter = self.frameCounter + UInt32(1)
+                if self.delegate != nil {
+                    self.delegate!.parser(self, didParseFrame: outputFrame!)
+                }
             }
-        }
-        
-        if outputFrame != nil {
-            self.frameCounter = self.frameCounter + UInt32(1)
+            
         }
         
         self.parserLock.unlock()
-        return outputFrame
     }
     
     func popNextFrameUUID() -> UInt32 {
