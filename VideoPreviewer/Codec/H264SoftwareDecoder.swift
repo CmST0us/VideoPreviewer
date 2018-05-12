@@ -9,6 +9,11 @@
 import Foundation
 import ffmpeg
 
+// [TODO] 使用自己定义的结构去
+public protocol H264SoftwareDecoderDelegate {
+    func decoder(_ decoder: H264SoftwareDecoder, didGotPicture picture: H264SoftwareDecoder.AVFramePtr)
+}
+
 /// 使用ffmpeg的H264解码器
 open class H264SoftwareDecoder {
     
@@ -16,9 +21,11 @@ open class H264SoftwareDecoder {
     /// h264解析器
     public var h264Parser: H264Parser!
     
+    /// 解码器Delegate
+    public var delegate: H264SoftwareDecoderDelegate?
     
     // MARK: - Private Member
-    typealias AVFramePtr = UnsafeMutablePointer<AVFrame>
+    public typealias AVFramePtr = UnsafeMutablePointer<AVFrame>
 
     private var pFrame: AVFramePtr!
     private var frameInfoListCount: Int!
@@ -26,15 +33,19 @@ open class H264SoftwareDecoder {
     
     
     // MARK: - Internal Member
-    init() {
+    public init() {
         self.initial()
+    }
+    deinit {
+        self.close()
+        self.free()
     }
     
 }
 
 // MARK: - Public Method
 extension H264SoftwareDecoder {
-    func initial() {
+    public func initial() {
         
         // 初始化解析器
         self.h264Parser = H264Parser()
@@ -57,11 +68,11 @@ extension H264SoftwareDecoder {
         self.frameInfoList = nil
     }
     
-    func free() {
+    public func free() {
         objc_sync_enter(self)
         
         if self.pFrame != nil {
-            av_freep(self.pFrame)
+            av_freep(&self.pFrame)
         }
         
         self.h264Parser.free()
@@ -75,20 +86,22 @@ extension H264SoftwareDecoder {
         objc_sync_exit(self)
     }
     
-    func open() -> Bool{
+    public func open() -> Bool{
         var nullPtr: OpaquePointer? = nil
         return avcodec_open2(self.h264Parser.codecContext, self.h264Parser.codec, &nullPtr) == 0
     }
     
-    func close() {
+    public func close() {
         avcodec_close(self.h264Parser.codecContext)
     }
     
-    func decode(_ frame: VideoFrame.H264, block: (_ didGotPicture: Bool) -> Void) {
+    public func decode(_ frame: VideoFrame.H264, block: (_ didGotPicture: Bool) -> Void) {
         objc_sync_enter(self)
         
-        if frame.frameData != nil || frame.frameSize <= 0{
+        if frame.frameData == nil || frame.frameSize <= 0{
             block(false)
+            objc_sync_exit(self)
+            return
         }
         
         var packet = AVPacket()
@@ -139,20 +152,10 @@ extension H264SoftwareDecoder: H264ParserDelegate {
     public func parser(_ parser: H264Parser, didParseFrame frame: VideoFrame.H264) {
         self.decode(frame) { (gotPicture) in
             if gotPicture {
-                let w = Int(self.pFrame.pointee.width)
-                let h = Int(self.pFrame.pointee.height)
-                let s = Int(self.pFrame.pointee.pkt_size)
-                
-                let mes = """
-                Frame got:
-                w = \(String(w))
-                h = \(String(h))
-                s = \(String(s))
-                """
-                print(mes)
+                if self.delegate != nil {
+                    self.delegate?.decoder(self, didGotPicture: self.pFrame)
+                }
             }
-            
-            
         }
     }
     

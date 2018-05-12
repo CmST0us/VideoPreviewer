@@ -215,8 +215,7 @@ extension H264Parser {
                 
                 outputFrame = VideoFrame.H264()
                 // [TODO] 数据拷贝，；类型修改->UnsafeMutablePointer<UInt8>
-                outputFrame!.frameData = UnsafeMutablePointer<UInt8>.allocate(capacity: Int(packetSize))
-                outputFrame!.frameData?.initialize(from: UnsafePointer<UInt8>.init(packetData!), count: Int(packetSize))
+                outputFrame!.frameData = packetData
                 
                 outputFrame!.typeTag = .videoFrameH264Raw
                 outputFrame!.frameUUID = self.frameUUIDCounter
@@ -242,18 +241,18 @@ extension H264Parser {
                 outputFrame!.frameInfo.frameFlag.hasIDR = pc.pointee.key_frame == 1
                 outputFrame!.frameInfo.frameFlag.isFullRange = false
                 
+                // [TODO] 这个shouldVerifyVideoStream还有点问题
+                if outputFrame != nil && !self.shouldVerifyVideoStream {
+                    self.frameCounter = self.frameCounter + UInt32(1)
+                    if self.delegate != nil {
+                        self.delegate!.parser(self, didParseFrame: outputFrame!)
+                    }
+                }
+                
             } else {
                 // 释放资源
                 av_free_packet(&packet)
                 break
-            }
-            
-            // [TODO] 这个shouldVerifyVideoStream还有点问题
-            if outputFrame != nil && !self.shouldVerifyVideoStream {
-                self.frameCounter = self.frameCounter + UInt32(1)
-                if self.delegate != nil {
-                    self.delegate!.parser(self, didParseFrame: outputFrame!)
-                }
             }
             
             // 释放资源
