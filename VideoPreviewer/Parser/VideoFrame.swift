@@ -77,7 +77,7 @@ public struct VideoFrame {
         var frameUUID: UInt32 = 0
         var timeTag: UInt64 = 0
         var frameInfo: BasicInfo.H264 = BasicInfo.H264()
-        var frameData: UnsafeRawPointer?
+        var frameData: UnsafeMutablePointer<UInt8>?
     }
 
 }

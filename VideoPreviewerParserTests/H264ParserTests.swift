@@ -41,6 +41,10 @@ extension H264ParserTests {
 
 // MARK: - H264Parser Parser Tests
 extension H264ParserTests: H264ParserDelegate {
+    func parserDidFoundSpsPps(_ parser: H264Parser) {
+        print("Found Sps Pps")
+    }
+    
     
     func testParserParserVideoTest() {
         self.parser = H264Parser()
@@ -49,7 +53,7 @@ extension H264ParserTests: H264ParserDelegate {
         let data = NSData.init(contentsOfFile: "/Users/cmst0us/Desktop/test.h264")!
         let mutablePtr = UnsafeMutableRawBufferPointer.init(start: UnsafeMutableRawPointer(mutating: data.bytes), count: data.length)
         var uselen: Int = 0
-        self.parser.parser(mutablePtr, usedLength: &uselen)
+        self.parser.parse(mutablePtr, usedLength: &uselen)
     }
     
     func parser(_ parser: H264Parser, didParseFrame frame: VideoFrame.H264) {

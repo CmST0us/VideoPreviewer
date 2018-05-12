@@ -11,6 +11,7 @@ import ffmpeg
 
 public protocol H264ParserDelegate {
     func parser(_ parser: H264Parser, didParseFrame frame: VideoFrame.H264)
+    func parserDidFoundSpsPps(_ parser: H264Parser)
 }
 
 open class H264Parser {
@@ -105,10 +106,6 @@ extension H264Parser {
     public func free() {
         self.parserLock.lock()
         
-        if self.codec != nil {
-            av_freep(&self.codec)
-        }
-        
         if self.codecContext != nil {
             
             avcodec_close(self.codecContext)
@@ -172,6 +169,7 @@ extension H264Parser {
             // c 函数通过指针访问Swift的结构体时，由于函数没有标记mutable，所以只有只读访问权限
             // 讲获取到的变量赋值给packet
             packet.size = packetSize
+            packet.data = packetData
             
             dataLength -= parserLen
             feedBuf = feedBuf.advanced(by: Int(parserLen))
@@ -193,6 +191,13 @@ extension H264Parser {
                 // 判断是否找到SOS或PPS帧
                 isSpsPpsFound = self.codecParserContext.pointee.frame_has_pps > 0
                 
+                if isSpsPpsFound {
+                    // 找到sps pps 帧
+                    if self.delegate != nil {
+                        self.delegate!.parserDidFoundSpsPps(self)
+                    }
+                }
+                
                 // 计算帧率，改为计算属性
                 
                 // 标记没有sps和pps的帧需要校验
@@ -207,7 +212,12 @@ extension H264Parser {
                 /// 构建outputFrame
                 let pc = self.codecParserContext!
                 let _ = self.popNextFrameUUID()
+                
                 outputFrame = VideoFrame.H264()
+                // [TODO] 数据拷贝，；类型修改->UnsafeMutablePointer<UInt8>
+                outputFrame!.frameData = UnsafeMutablePointer<UInt8>.allocate(capacity: Int(packetSize))
+                outputFrame!.frameData?.initialize(from: UnsafePointer<UInt8>.init(packetData!), count: Int(packetSize))
+                
                 outputFrame!.typeTag = .videoFrameH264Raw
                 outputFrame!.frameUUID = self.frameUUIDCounter
                 outputFrame!.frameSize = UInt32(packet.size)
@@ -232,16 +242,22 @@ extension H264Parser {
                 outputFrame!.frameInfo.frameFlag.hasIDR = pc.pointee.key_frame == 1
                 outputFrame!.frameInfo.frameFlag.isFullRange = false
                 
+            } else {
+                // 释放资源
+                av_free_packet(&packet)
+                break
             }
-            // 释放资源
-            av_free_packet(&packet)
             
-            if outputFrame != nil {
+            // [TODO] 这个shouldVerifyVideoStream还有点问题
+            if outputFrame != nil && !self.shouldVerifyVideoStream {
                 self.frameCounter = self.frameCounter + UInt32(1)
                 if self.delegate != nil {
                     self.delegate!.parser(self, didParseFrame: outputFrame!)
                 }
             }
+            
+            // 释放资源
+            av_free_packet(&packet)
             
         }
         
