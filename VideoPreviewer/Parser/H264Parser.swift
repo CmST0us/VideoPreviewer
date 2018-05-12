@@ -1,5 +1,5 @@
 //
-//  VideoPreviewerH264Parser.swift
+//  H264Parser.swift
 //  VideoPreviewer
 //
 //  Created by CmST0us on 2018/5/11.
@@ -9,11 +9,11 @@
 import Foundation
 import ffmpeg
 
-public protocol VideoPreviewerH264ParserDelegate {
-    func parser(_ parser: VideoPreviewerH264Parser, didParseFrame frame: VideoFrame.H264)
+public protocol H264ParserDelegate {
+    func parser(_ parser: H264Parser, didParseFrame frame: VideoFrame.H264)
 }
 
-open class VideoPreviewerH264Parser {
+open class H264Parser {
     
     // MARK: - Public Member
     /// 精确的帧率
@@ -56,7 +56,7 @@ open class VideoPreviewerH264Parser {
     
     public var shouldVerifyVideoStream: Bool
     
-    public var delegate: VideoPreviewerH264ParserDelegate?
+    public var delegate: H264ParserDelegate?
     
     // MARK: - Internal Member
     private var frameUUIDCounter: UInt32 = 0
@@ -80,7 +80,7 @@ open class VideoPreviewerH264Parser {
 }
 
 // MARK: - Public Method
-extension VideoPreviewerH264Parser {
+extension H264Parser {
     public func initial() {
         self.parserLock.lock()
         
@@ -93,6 +93,9 @@ extension VideoPreviewerH264Parser {
         assert(pCodec != nil, "can not find decoder")
         self.codecContext = avcodec_alloc_context3(UnsafePointer(pCodec!))
         self.codecParserContext = av_parser_init(Int32(AV_CODEC_ID_H264.rawValue))
+        
+        // 配置解码器上下文
+        
         
         self.parserLock.unlock()
     }

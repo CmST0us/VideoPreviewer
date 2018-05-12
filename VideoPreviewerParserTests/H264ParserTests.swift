@@ -1,5 +1,5 @@
 //
-//  VideoPreviewerH264ParserTests.swift
+//  H264ParserTests.swift
 //  VideoPreviewerParserTests
 //
 //  Created by CmST0us on 2018/5/12.
@@ -8,9 +8,9 @@
 
 import XCTest
 
-class VideoPreviewerH264ParserTests: XCTestCase {
+class H264ParserTests: XCTestCase {
     
-    var parser: VideoPreviewerH264Parser!
+    var parser: H264Parser!
     
     override func setUp() {
         super.setUp()
@@ -25,14 +25,14 @@ class VideoPreviewerH264ParserTests: XCTestCase {
 }
 
 // MARK: - H264Parser Inital Tests
-extension VideoPreviewerH264ParserTests {
+extension H264ParserTests {
     func testInitParserAndFree() {
-        self.parser = VideoPreviewerH264Parser()
+        self.parser = H264Parser()
         self.parser.initial()
         self.parser.free()
     }
     func testParserReset() {
-        self.parser = VideoPreviewerH264Parser()
+        self.parser = H264Parser()
         self.parser.initial()
         self.parser.reset()
     }
@@ -40,10 +40,10 @@ extension VideoPreviewerH264ParserTests {
 
 
 // MARK: - H264Parser Parser Tests
-extension VideoPreviewerH264ParserTests: VideoPreviewerH264ParserDelegate {
+extension H264ParserTests: H264ParserDelegate {
     
     func testParserParserVideoTest() {
-        self.parser = VideoPreviewerH264Parser()
+        self.parser = H264Parser()
         self.parser.delegate = self
         self.parser.initial()
         let data = NSData.init(contentsOfFile: "/Users/cmst0us/Desktop/test.h264")!
@@ -52,7 +52,7 @@ extension VideoPreviewerH264ParserTests: VideoPreviewerH264ParserDelegate {
         self.parser.parser(mutablePtr, usedLength: &uselen)
     }
     
-    func parser(_ parser: VideoPreviewerH264Parser, didParseFrame frame: VideoFrame.H264) {
+    func parser(_ parser: H264Parser, didParseFrame frame: VideoFrame.H264) {
         let outputMessage = """
 Frame \(String(frame.frameInfo.frameIndex)) fps: \(String(parser.frameRate)) :
         \(String(parser.outputWidth)) x \(String(parser.outputHeight)) \(String(frame.frameSize)) Byte

@@ -9,15 +9,15 @@
 /* Begin PBXBuildFile section */
 		4F113F1020A6B17B00BB0FAB /* VideoPreviewer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4FF66F3C20A57A0F0083DB0A /* VideoPreviewer.framework */; };
 		4F113F1620A6B18400BB0FAB /* VideoFrame.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FCBA98620A5D52C0073C605 /* VideoFrame.swift */; };
-		4F113F1720A6B18700BB0FAB /* VideoPreviewerH264Parser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FCBA98420A5D3F50073C605 /* VideoPreviewerH264Parser.swift */; };
-		4F113F1A20A6B20500BB0FAB /* VideoPreviewerH264ParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F113F1920A6B20500BB0FAB /* VideoPreviewerH264ParserTests.swift */; };
+		4F113F1720A6B18700BB0FAB /* H264Parser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FCBA98420A5D3F50073C605 /* H264Parser.swift */; };
+		4F113F1A20A6B20500BB0FAB /* H264ParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F113F1920A6B20500BB0FAB /* H264ParserTests.swift */; };
 		4F113F1C20A6B30B00BB0FAB /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F113F1B20A6B30B00BB0FAB /* libz.tbd */; };
 		4FCBA97920A57EA70073C605 /* VideoPreviewerAsyncCommandQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FCBA97820A57EA70073C605 /* VideoPreviewerAsyncCommandQueue.swift */; };
 		4FCBA97B20A57F950073C605 /* VideoPreviewerAsyncCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FCBA97A20A57F950073C605 /* VideoPreviewerAsyncCommand.swift */; };
 		4FCBA97D20A5974E0073C605 /* VideoPreviewerAsyncCommandQueueTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FCBA97C20A5974E0073C605 /* VideoPreviewerAsyncCommandQueueTests.swift */; };
 		4FCBA97E20A597540073C605 /* VideoPreviewerAsyncCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FCBA97A20A57F950073C605 /* VideoPreviewerAsyncCommand.swift */; };
 		4FCBA97F20A597570073C605 /* VideoPreviewerAsyncCommandQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FCBA97820A57EA70073C605 /* VideoPreviewerAsyncCommandQueue.swift */; };
-		4FCBA98520A5D3F50073C605 /* VideoPreviewerH264Parser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FCBA98420A5D3F50073C605 /* VideoPreviewerH264Parser.swift */; };
+		4FCBA98520A5D3F50073C605 /* H264Parser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FCBA98420A5D3F50073C605 /* H264Parser.swift */; };
 		4FCBA98720A5D52C0073C605 /* VideoFrame.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FCBA98620A5D52C0073C605 /* VideoFrame.swift */; };
 		4FCBA9F820A5E3C00073C605 /* libavutil.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4FCBA98D20A5E3C00073C605 /* libavutil.a */; };
 		4FCBA9F920A5E3C00073C605 /* libavfilter.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4FCBA98E20A5E3C00073C605 /* libavfilter.a */; };
@@ -146,12 +146,12 @@
 /* Begin PBXFileReference section */
 		4F113F0B20A6B17B00BB0FAB /* VideoPreviewerParserTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = VideoPreviewerParserTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		4F113F0F20A6B17B00BB0FAB /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		4F113F1920A6B20500BB0FAB /* VideoPreviewerH264ParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoPreviewerH264ParserTests.swift; sourceTree = "<group>"; };
+		4F113F1920A6B20500BB0FAB /* H264ParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = H264ParserTests.swift; sourceTree = "<group>"; };
 		4F113F1B20A6B30B00BB0FAB /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = usr/lib/libz.tbd; sourceTree = SDKROOT; };
 		4FCBA97820A57EA70073C605 /* VideoPreviewerAsyncCommandQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoPreviewerAsyncCommandQueue.swift; sourceTree = "<group>"; };
 		4FCBA97A20A57F950073C605 /* VideoPreviewerAsyncCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoPreviewerAsyncCommand.swift; sourceTree = "<group>"; };
 		4FCBA97C20A5974E0073C605 /* VideoPreviewerAsyncCommandQueueTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoPreviewerAsyncCommandQueueTests.swift; sourceTree = "<group>"; };
-		4FCBA98420A5D3F50073C605 /* VideoPreviewerH264Parser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoPreviewerH264Parser.swift; sourceTree = "<group>"; };
+		4FCBA98420A5D3F50073C605 /* H264Parser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = H264Parser.swift; sourceTree = "<group>"; };
 		4FCBA98620A5D52C0073C605 /* VideoFrame.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoFrame.swift; sourceTree = "<group>"; };
 		4FCBA98D20A5E3C00073C605 /* libavutil.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libavutil.a; sourceTree = "<group>"; };
 		4FCBA98E20A5E3C00073C605 /* libavfilter.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libavfilter.a; sourceTree = "<group>"; };
@@ -305,15 +305,22 @@
 			isa = PBXGroup;
 			children = (
 				4F113F0F20A6B17B00BB0FAB /* Info.plist */,
-				4F113F1920A6B20500BB0FAB /* VideoPreviewerH264ParserTests.swift */,
+				4F113F1920A6B20500BB0FAB /* H264ParserTests.swift */,
 			);
 			path = VideoPreviewerParserTests;
+			sourceTree = "<group>";
+		};
+		4F113F1F20A70A4300BB0FAB /* Codec */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Codec;
 			sourceTree = "<group>";
 		};
 		4FCBA98120A5D3AA0073C605 /* Parser */ = {
 			isa = PBXGroup;
 			children = (
-				4FCBA98420A5D3F50073C605 /* VideoPreviewerH264Parser.swift */,
+				4FCBA98420A5D3F50073C605 /* H264Parser.swift */,
 				4FCBA98620A5D52C0073C605 /* VideoFrame.swift */,
 			);
 			path = Parser;
@@ -538,6 +545,7 @@
 		4FF66F3E20A57A0F0083DB0A /* VideoPreviewer */ = {
 			isa = PBXGroup;
 			children = (
+				4F113F1F20A70A4300BB0FAB /* Codec */,
 				4FCBA98B20A5E3720073C605 /* ffmpeg */,
 				4FCBA98120A5D3AA0073C605 /* Parser */,
 				4FF66F5220A57A690083DB0A /* MovieGLView.swift */,
@@ -798,8 +806,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4F113F1720A6B18700BB0FAB /* VideoPreviewerH264Parser.swift in Sources */,
-				4F113F1A20A6B20500BB0FAB /* VideoPreviewerH264ParserTests.swift in Sources */,
+				4F113F1720A6B18700BB0FAB /* H264Parser.swift in Sources */,
+				4F113F1A20A6B20500BB0FAB /* H264ParserTests.swift in Sources */,
 				4F113F1620A6B18400BB0FAB /* VideoFrame.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -810,7 +818,7 @@
 			files = (
 				4FF66F5320A57A690083DB0A /* VideoPreviewerQueue.swift in Sources */,
 				4FCBA97920A57EA70073C605 /* VideoPreviewerAsyncCommandQueue.swift in Sources */,
-				4FCBA98520A5D3F50073C605 /* VideoPreviewerH264Parser.swift in Sources */,
+				4FCBA98520A5D3F50073C605 /* H264Parser.swift in Sources */,
 				4FCBA97B20A57F950073C605 /* VideoPreviewerAsyncCommand.swift in Sources */,
 				4FCBA98720A5D52C0073C605 /* VideoFrame.swift in Sources */,
 				4FF66F5620A57A690083DB0A /* MovieGLView.swift in Sources */,
