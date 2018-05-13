@@ -141,7 +141,11 @@ extension H264Parser {
         var parserLen: Int32 = 0
         usedLength = 0
         
-        let bufAddress = UnsafeMutableRawBufferPointer.allocate(byteCount: data.count + Int(FF_INPUT_BUFFER_PADDING_SIZE), alignment: MemoryLayout<UInt8>.alignment)
+        let bufSize = data.count + Int(FF_INPUT_BUFFER_PADDING_SIZE)
+        let bufAddress = UnsafeMutableRawBufferPointer.allocate(byteCount: bufSize, alignment: MemoryLayout<UInt8>.alignment)
+        // The end of the input buffer buf should be set to 0 to ensure that no overreading happens for damaged MPEG streams.
+        memset(bufAddress.baseAddress, 0, bufSize)
+        
         bufAddress.copyMemory(from: UnsafeRawBufferPointer.init(data))
         var feedBuf = bufAddress.bindMemory(to: UInt8.self).baseAddress!
         
@@ -188,7 +192,7 @@ extension H264Parser {
                 // 取出帧的宽高, 改为计算属性
                 // [TODO] 468 × 212， 这是原视频的尺寸，上面那个hack估计是为了解决这个问题，ffmpeg命令行用码流创建后可以恢复468 x 212
                 
-                // 判断是否找到SOS或PPS帧
+                // 判断是否找到SPS或PPS帧
                 isSpsPpsFound = self.codecParserContext.pointee.frame_has_pps > 0
                 
                 if isSpsPpsFound {
