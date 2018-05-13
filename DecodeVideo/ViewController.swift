@@ -1,27 +1,30 @@
 //
-//  H264DecoderTests.swift
-//  VideoPreviewerParserTests
+//  ViewController.swift
+//  DecodeVideo
 //
-//  Created by CmST0us on 2018/5/12.
+//  Created by CmST0us on 2018/5/14.
 //  Copyright © 2018年 eric3u. All rights reserved.
 //
 
-import XCTest
+import UIKit
+import VideoPreviewer
 
-class H264DecoderTests: XCTestCase {
-    
+class ViewController: UIViewController {
+
+    @IBOutlet weak var imageView: UIImageView!
     var decoder: H264SoftwareDecoder!
     var fps: Int = 0
     var frameCount: Int = 0
     var fpsTimer: Timer!
     var timerThread: Thread!
     
-    override func setUp() {
-        super.setUp()
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
         decoder = H264SoftwareDecoder()
         decoder.initial()
         decoder.delegate = self
-        
+        decoder.open()
         self.timerThread = Thread.init(block: { [weak self] in
             
             self!.fpsTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true, block: { (timer) in
@@ -37,29 +40,24 @@ class H264DecoderTests: XCTestCase {
         
         self.timerThread.start()
         
-        XCTAssert(decoder.open(), "decoder can not open")
     }
-    
-    override func tearDown() {
-        super.tearDown()
-        decoder.close()
-        decoder.free()
-        self.timerThread.cancel()
-        self.fpsTimer.invalidate()
-        self.fpsTimer = nil
+
+    override func didReceiveMemoryWarning() {
+        super.didReceiveMemoryWarning()
+        // Dispose of any resources that can be recreated.
     }
-    
-    
-    func testDecode() {
-        let data = NSData.init(contentsOfFile: "/Users/cmst0us/Desktop/swift.h264")!
-        let mutablePtr = UnsafeMutableRawBufferPointer.init(start: UnsafeMutableRawPointer(mutating: data.bytes), count: data.length)
-        var uselen: Int = 0
-        self.decoder.parser.parse(mutablePtr, usedLength: &uselen)
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        Thread.detachNewThread {
+            let data = NSData.init(contentsOfFile: "/Users/cmst0us/Desktop/swift.h264")!
+            let mutablePtr = UnsafeMutableRawBufferPointer.init(start: UnsafeMutableRawPointer(mutating: data.bytes), count: data.length)
+            var uselen: Int = 0
+            self.decoder.parser.parse(mutablePtr, usedLength: &uselen)
+        }
     }
-    
+
 }
 
-extension H264DecoderTests: H264SoftwareDecoderDelegate {
+extension ViewController: H264SoftwareDecoderDelegate {
     func decoder(_ decoder: H264SoftwareDecoder, didGotPicture picture: VideoFrame.YUV) {
         let w = Int(picture.width)
         let h = Int(picture.height)
@@ -67,16 +65,18 @@ extension H264DecoderTests: H264SoftwareDecoderDelegate {
         self.frameCount += 1
         let mes = """
         fps (\(String(self.fps))) Frame got:
-            w = \(String(w))
-            h = \(String(h))
-            s = \(String(s))
+        w = \(String(w))
+        h = \(String(h))
+        s = \(String(s))
         """
         print(mes)
         if let cgImageUnmanaged = picture.getYUV420PCVImage() {
             let cgImage = cgImageUnmanaged.takeRetainedValue()
             let image = UIImage.init(cgImage: cgImage)
-            image
-            print(" ")
+            
+            DispatchQueue.main.async {
+                self.imageView.image = image
+            }
         }
         
     }

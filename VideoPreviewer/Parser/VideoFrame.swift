@@ -7,10 +7,10 @@
 //
 
 import Foundation
-import Accelerate
 
 #if os(iOS)
-import CoreVideo
+import Accelerate
+import CoreGraphics
 #endif
 
 public let AV_NOPTS_VALUE = 0x8000_0000_0000_0000 as UInt64
@@ -152,34 +152,62 @@ public struct VideoFrame {
             
         }
         
-        public func getYUV420PCVImage() -> CVImageBuffer? {
-            let options = [
-                kCVPixelBufferCGImageCompatibilityKey: NSNumber.init(value: true),
-                kCVPixelBufferCGBitmapContextCompatibilityKey: NSNumber.init(value: true),
-            ]
+        public func getYUV420PCVImage() -> Unmanaged<CGImage>? {
             
-            var pixBuffer: CVPixelBuffer? = nil
-            let ret = CVPixelBufferCreate(kCFAllocatorDefault, self.width, self.height, kCVPixelFormatType_420YpCbCr8Planar, options as CFDictionary, &pixBuffer)
+            var lumaBuffer = vImage_Buffer()
+            var chromaBBuffer = vImage_Buffer()
+            var chromaRBuffer = vImage_Buffer()
+            var destBuffer = vImage_Buffer()
             
-            if ret != kCVReturnSuccess {
+            vImageBuffer_Init(&lumaBuffer, UInt(self.height), UInt(self.width), 8, UInt32(kvImageNoFlags))
+            
+            vImageBuffer_Init(&chromaBBuffer, UInt(self.height), UInt(self.width), 8, UInt32(kvImageNoFlags))
+
+            vImageBuffer_Init(&chromaRBuffer, UInt(self.height), UInt(self.width), 8, UInt32(kvImageNoFlags))
+            
+            vImageBuffer_Init(&destBuffer, UInt(self.height), UInt(self.width), 8, UInt32(kvImageNoFlags))
+            
+            vImageBufferFill_CbCr8(&lumaBuffer, self.luma, UInt32(kvImageNoFlags))
+            vImageBufferFill_CbCr8(&chromaBBuffer, self.chromaB, UInt32(kvImageNoFlags))
+            vImageBufferFill_CbCr8(&chromaRBuffer, self.chromaR, UInt32(kvImageNoFlags))
+            
+            var convertInfo = vImage_YpCbCrToARGB.init()
+            var pixelRange = vImage_YpCbCrPixelRange(Yp_bias: 16, CbCr_bias: 128, YpRangeMax: 235, CbCrRangeMax: 240, YpMax: 255, YpMin: 0, CbCrMax: 255, CbCrMin: 0)
+            
+            var permuteMap: [UInt8] = [0, 1, 2, 3] // ARGB
+            // [TODO] 看看frame里面的标准是什么
+            vImageConvert_YpCbCrToARGB_GenerateConversion(kvImage_YpCbCrToARGBMatrix_ITU_R_601_4, &pixelRange, &convertInfo, kvImage420Yp8_Cb8_Cr8, kvImageARGB8888, vImage_Flags(kvImageNoFlags))
+            
+            if vImageConvert_420Yp8_Cb8_Cr8ToARGB8888(&lumaBuffer, &chromaBBuffer, &chromaRBuffer, &destBuffer, &convertInfo, &permuteMap, 255, vImage_Flags(kvImageNoFlags)) != kvImageNoError {
+                lumaBuffer.data.deallocate()
+                chromaBBuffer.data.deallocate()
+                chromaRBuffer.data.deallocate()
+                destBuffer.data.deallocate()
                 return nil
             }
             
-            if CVPixelBufferLockBaseAddress(pixBuffer!, CVPixelBufferLockFlags.init(rawValue: 0)) != kCVReturnSuccess {
-                return nil
-            }
+            var format = vImage_CGImageFormat()
+            let bitmapInfo = CGImageAlphaInfo.first.rawValue | CGImageByteOrderInfo.orderDefault.rawValue
+            format.bitmapInfo = CGBitmapInfo.init(rawValue: bitmapInfo)
+            format.bitsPerComponent = 8
+            format.bitsPerPixel = 32
+            format.colorSpace = Unmanaged<CGColorSpace>.passRetained(CGColorSpaceCreateDeviceRGB())
+            format.decode = nil
+            format.renderingIntent = .defaultIntent
+            format.version = 0
             
-            let luma = CVPixelBufferGetBaseAddressOfPlane(pixBuffer!, 0)!.bindMemory(to: UInt8.self, capacity: self.width * self.height)
-            let chromaB = CVPixelBufferGetBaseAddressOfPlane(pixBuffer!, 1)!.bindMemory(to: UInt8.self, capacity: self.width * self.height / 4)
-            let chromaR = CVPixelBufferGetBaseAddressOfPlane(pixBuffer!, 2)!.bindMemory(to: UInt8.self, capacity: self.width * self.height / 4)
+            var error: vImage_Error = 0
+            let ret = vImageCreateCGImageFromBuffer(&destBuffer,
+                                          &format, { (ptr1, ptr2) in
+                
+            }, nil, vImage_Flags(kvImageNoFlags), &error)
             
-            copyYUVFrame(dst: luma, src: self.luma, linesize: self.lumaLineSize, width: self.width, height: self.height)
-            copyYUVFrame(dst: chromaB, src: self.chromaB, linesize: self.chromaBLineSize, width: self.width, height: self.height)
-            copyYUVFrame(dst: chromaR, src: self.chromaR, linesize: self.chromaRLineSize, width: self.width, height: self.height)
+            lumaBuffer.data.deallocate()
+            chromaBBuffer.data.deallocate()
+            chromaRBuffer.data.deallocate()
+            destBuffer.data.deallocate()
             
-            CVPixelBufferUnlockBaseAddress(pixBuffer!, CVPixelBufferLockFlags.init(rawValue: 0))
-            
-            return pixBuffer
+            return ret
         }
         
     }

@@ -124,23 +124,32 @@ extension H264SoftwareDecoder {
         }
         
         var packet = AVPacket()
+        av_init_packet(&packet)
         packet.data = frame.frameData
         packet.size = Int32(frame.frameSize)
         
-        if self.frameInfoListCount > frame.frameInfo.frameIndex {
-            let currentFrameIndex = Int(frame.frameInfo.frameIndex)
-            self.frameInfoList[currentFrameIndex] = frame
-        }
-        
-        var didGotPicture: Int32 = 0
-        avcodec_decode_video2(self.parser.codecContext, self.pFrame, &didGotPicture, &packet)
-        
-        if self.parser.codecContext.pointee.height == 1088 {
-            self.parser.codecContext.pointee.height = 1080
-        }
-        
-        if didGotPicture > 0 {
-            block(true)
+        while packet.size > 0 {
+            if self.frameInfoListCount > frame.frameInfo.frameIndex {
+                let currentFrameIndex = Int(frame.frameInfo.frameIndex)
+                self.frameInfoList[currentFrameIndex] = frame
+            }
+            
+            var didGotPicture: Int32 = 0
+            
+            let decodeLen = avcodec_decode_video2(self.parser.codecContext, self.pFrame, &didGotPicture, &packet)
+            
+            
+            if self.parser.codecContext.pointee.height == 1088 {
+                self.parser.codecContext.pointee.height = 1080
+            }
+            
+            block(didGotPicture > 0)
+            
+            if decodeLen < 0 {
+                break
+            }
+            
+            packet.size -= decodeLen
         }
         
         av_free_packet(&packet)
@@ -231,6 +240,7 @@ extension H264SoftwareDecoder: H264ParserDelegate {
                 self.frameInfoList = UnsafeMutableBufferPointer<VideoFrame.H264>.allocate(capacity: MemoryLayout<VideoFrame.H264>.stride * self.frameInfoListCount)
                 memset(self.frameInfoList.baseAddress!, 0, self.frameInfoList.count)
             }
+            
         }
     }
     
