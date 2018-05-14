@@ -62,13 +62,18 @@ extension H264SoftwareDecoder {
         self.pFrame = av_frame_alloc()
 
         // [TODO] [WARNING] 探究一下这个标记
-        self.parser.codecContext.pointee.flags2 |= CODEC_FLAG2_FAST
-        // decide how many independent tasks should be passed to execute()
-        self.parser.codecContext.pointee.thread_count = 2
-        self.parser.codecContext.pointee.thread_type = FF_THREAD_FRAME
+//        self.parser.codecContext.pointee.flags2 |= CODEC_FLAG2_FAST
+//
+//        // decide how many independent tasks should be passed to execute()
+//        self.parser.codecContext.pointee.thread_count = 2
+//        self.parser.codecContext.pointee.thread_type = FF_THREAD_FRAME
+//        
+//        if (self.parser.codec.pointee.capabilities & CODEC_FLAG_LOW_DELAY) > 0 {
+//            self.parser.codecContext.pointee.flags |= CODEC_FLAG_LOW_DELAY
+//        }
         
-        if (self.parser.codec.pointee.capabilities & CODEC_FLAG_LOW_DELAY) > 0 {
-            self.parser.codecContext.pointee.flags |= CODEC_FLAG_LOW_DELAY
+        if (self.parser.codec.pointee.capabilities & CODEC_FLAG_TRUNCATED) > 0 {
+            self.parser.codec.pointee.capabilities |= CODEC_FLAG_TRUNCATED
         }
         
         self.frameInfoListCount = 0
@@ -135,7 +140,7 @@ extension H264SoftwareDecoder {
             }
             
             var didGotPicture: Int32 = 0
-            
+        
             let decodeLen = avcodec_decode_video2(self.parser.codecContext, self.pFrame, &didGotPicture, &packet)
             
             
