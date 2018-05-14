@@ -1,5 +1,7 @@
 #Project ignore
 VideoPreviewer-Objc/
+*/ffmpeg/*
+*ffmpeg/
 
 # Xcode
 #
