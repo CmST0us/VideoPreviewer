@@ -33,7 +33,7 @@ func copyYUVFrame(dst: UnsafeMutablePointer<UInt8>,
     let h = height
     
     for _ in 0 ..< h {
-        dstPtr.assign(from: src, count: width)
+        memcpy(dstPtr, srcPtr, width)
         dstPtr = dstPtr.advanced(by: w)
         srcPtr = srcPtr.advanced(by: ls)
     }
@@ -132,7 +132,7 @@ public struct VideoFrame {
         public var cvPixelBufferFastUpload: UnsafeMutableRawPointer!
         
         public var frameUUID: UInt32 = 0
-        public var frameInfo = BasicInfo.H264()
+        public var frameInfo: BasicInfo.H264 = BasicInfo.H264()
         
         mutating func free() {
             if self.luma != nil {
@@ -167,16 +167,20 @@ public struct VideoFrame {
             
             vImageBuffer_Init(&destBuffer, UInt(self.height), UInt(self.width), 8, UInt32(kvImageNoFlags))
             
-            vImageBufferFill_CbCr8(&lumaBuffer, self.luma, UInt32(kvImageNoFlags))
-            vImageBufferFill_CbCr8(&chromaBBuffer, self.chromaB, UInt32(kvImageNoFlags))
-            vImageBufferFill_CbCr8(&chromaRBuffer, self.chromaR, UInt32(kvImageNoFlags))
+            lumaBuffer.data.assumingMemoryBound(to: UInt8.self).assign(from: self.luma, count: self.width * self.height)
+            chromaBBuffer.data.assumingMemoryBound(to: UInt8.self).assign(from: self.chromaB, count: self.width / 2 * self.height / 2)
+            chromaRBuffer.data.assumingMemoryBound(to: UInt8.self).assign(from: self.chromaR, count: self.width / 2 * self.height / 2)
+            
+//            vImageBufferFill_CbCr8(&lumaBuffer, self.luma, UInt32(kvImageNoFlags))
+//            vImageBufferFill_CbCr8(&chromaBBuffer, self.chromaB, UInt32(kvImageNoFlags))
+//            vImageBufferFill_CbCr8(&chromaRBuffer, self.chromaR, UInt32(kvImageNoFlags))
             
             var convertInfo = vImage_YpCbCrToARGB.init()
             var pixelRange = vImage_YpCbCrPixelRange(Yp_bias: 16, CbCr_bias: 128, YpRangeMax: 235, CbCrRangeMax: 240, YpMax: 255, YpMin: 0, CbCrMax: 255, CbCrMin: 0)
             
             var permuteMap: [UInt8] = [0, 1, 2, 3] // ARGB
             // [TODO] 看看frame里面的标准是什么
-            vImageConvert_YpCbCrToARGB_GenerateConversion(kvImage_YpCbCrToARGBMatrix_ITU_R_601_4, &pixelRange, &convertInfo, kvImage420Yp8_Cb8_Cr8, kvImageARGB8888, vImage_Flags(kvImageNoFlags))
+            vImageConvert_YpCbCrToARGB_GenerateConversion(kvImage_YpCbCrToARGBMatrix_ITU_R_709_2, &pixelRange, &convertInfo, kvImage420Yp8_Cb8_Cr8, kvImageARGB8888, vImage_Flags(kvImageNoFlags))
             
             if vImageConvert_420Yp8_Cb8_Cr8ToARGB8888(&lumaBuffer, &chromaBBuffer, &chromaRBuffer, &destBuffer, &convertInfo, &permuteMap, 255, vImage_Flags(kvImageNoFlags)) != kvImageNoError {
                 lumaBuffer.data.deallocate()
@@ -211,5 +215,32 @@ public struct VideoFrame {
         }
         
     }
-
+    
+    public struct PixelMap {
+        
+        public var width: Int = 0
+        public var height: Int = 0
+        public var lineSize: Int = 0
+        public var data: UnsafeMutablePointer<UInt8>! = nil
+        
+        public init() {
+            self.init(width: 0, height: 0, lineSize: 0)
+        }
+        
+        public init(width: Int, height: Int, lineSize: Int) {
+            self.width = width
+            self.height = height
+            self.lineSize = lineSize
+        }
+        
+        public mutating func allocData() {
+            self.data = UnsafeMutablePointer<UInt8>.allocate(capacity: lineSize * height)
+        }
+        
+        public mutating func freeData() {
+            self.data.deallocate()
+            self.data = nil
+        }
+    }
+    
 }

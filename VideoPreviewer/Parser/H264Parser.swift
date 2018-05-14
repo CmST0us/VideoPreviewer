@@ -28,9 +28,7 @@ open class H264Parser {
     /// 帧间时间间隔
     public var frameInterval: TimeInterval {
         if self.codecParserContext != nil {
-            if self.codecParserContext.pointee.frame_rate_num > 0 && self.codecParserContext.pointee.frame_rate_den > 0 {
-                return TimeInterval(self.codecParserContext.pointee.frame_rate_den) / TimeInterval(self.codecParserContext.pointee.frame_rate_num)
-            }
+            return 0
         }
         
         return 0
@@ -42,14 +40,14 @@ open class H264Parser {
     /// 输出视频的宽
     public var outputWidth: Int {
         if self.codecParserContext != nil {
-            return Int(self.codecParserContext.pointee.width_in_pixel)
+            return Int(self.codecParserContext.pointee.width)
         }
         return 0
     }
     /// 输出视频的高
     public var outputHeight: Int {
         if self.codecParserContext != nil {
-            return Int(self.codecParserContext.pointee.height_in_pixel)
+            return Int(self.codecParserContext.pointee.height)
         }
         return 0
     }
@@ -97,8 +95,9 @@ extension H264Parser {
         
         self.codec = avcodec_find_decoder(AV_CODEC_ID_H264)
         assert(self.codec != nil, "can not find decoder")
+        
+        self.codecParserContext = av_parser_init(Int32(self.codec.pointee.id.rawValue))
         self.codecContext = avcodec_alloc_context3(UnsafePointer(self.codec))
-        self.codecParserContext = av_parser_init(Int32(AV_CODEC_ID_H264.rawValue))
         
         self.parserLock.unlock()
     }
@@ -151,119 +150,89 @@ extension H264Parser {
         
         var outputFrame: VideoFrame.H264?
         
-        while dataLength > 0 {
-            
-            var packet: AVPacket = AVPacket()
-            av_init_packet(&packet)
+        var packet: UnsafeMutablePointer<AVPacket>? = av_packet_alloc()
+        
 
-            var packetData = packet.data
-            var packetSize = packet.size
+        while dataLength > 0 {
+
+            var packetData: UnsafeMutablePointer<UInt8>?
+            var packetSize: Int32 = 0
             
             parserLen = av_parser_parse2(
                 self.codecParserContext,
                 self.codecContext,
-                &(packetData),
-                &(packetSize),
+                &packetData,
+                &packetSize,
                 feedBuf,
                 dataLength,
                 AV_NOPTS_VALUE,
                 AV_NOPTS_VALUE,
-                AV_NOPTS_VALUE)
+                0)
             
             // c 函数通过指针访问Swift的结构体时，由于函数没有标记mutable，所以只有只读访问权限
             // 讲获取到的变量赋值给packet
-            packet.size = packetSize
-            packet.data = packetData
+            packet!.pointee.size = packetSize
+            packet!.pointee.data = packetData
             
             dataLength -= parserLen
             feedBuf = feedBuf.advanced(by: Int(parserLen))
             
             usedLength += Int(parserLen)
             
-            if packet.size > 0 {
-                // 解码NAL
-                var isSpsPpsFound = false
+            if packet!.pointee.size > 0 {
                 
                 // [TODO] hack code??
-                if self.codecParserContext.pointee.height_in_pixel == 1088 {
-                    self.codecParserContext.pointee.height_in_pixel = 1080
+                if self.codecParserContext.pointee.height == 1088 {
+                    self.codecParserContext.pointee.height = 1080
                 }
                 
                 // 取出帧的宽高, 改为计算属性
                 // [TODO] 468 × 212， 这是原视频的尺寸，上面那个hack估计是为了解决这个问题，ffmpeg命令行用码流创建后可以恢复468 x 212
                 
                 // 判断是否找到SPS或PPS帧
-                isSpsPpsFound = self.codecParserContext.pointee.frame_has_pps > 0
-                
-                if isSpsPpsFound {
-                    // 找到sps pps 帧
-                    if self.delegate != nil {
-                        self.delegate!.parserDidFoundSpsPps(self)
-                    }
-                }
                 
                 // 计算帧率，改为计算属性
                 
                 // 标记没有sps和pps的帧需要校验
-                if self.shouldVerifyVideoStream {
-                    if isSpsPpsFound {
-                        self.shouldVerifyVideoStream = false
-                    } else {
-                        continue
-                    }
-                }
                 
                 /// 构建outputFrame
                 let pc = self.codecParserContext!
                 let _ = self.popNextFrameUUID()
                 
                 outputFrame = VideoFrame.H264()
-                // [TODO] 数据拷贝，；类型修改->UnsafeMutablePointer<UInt8>
+
                 outputFrame!.frameData = packetData
-                
                 outputFrame!.typeTag = .videoFrameH264Raw
                 outputFrame!.frameUUID = self.frameUUIDCounter
-                outputFrame!.frameSize = UInt32(packet.size)
+                outputFrame!.frameSize = UInt32(packet!.pointee.size)
             
-                outputFrame!.frameInfo.frameIndex = pc.pointee.frame_num
-                outputFrame!.frameInfo.maxFrameIndexPlusOne = pc.pointee.max_frame_num_plus1
+                outputFrame!.frameInfo.frameIndex = pc.pointee.output_picture_number
+
                 
-                if outputFrame!.frameInfo.frameIndex >= outputFrame!.frameInfo.maxFrameIndexPlusOne {
-                    // Never Cound Run Here
-                }
-                
-                if pc.pointee.height_in_pixel == 1088 {
-                    pc.pointee.height_in_pixel = 1080
+                if pc.pointee.height == 1088 {
+                    pc.pointee.height = 1080
                 }
                 
                 outputFrame!.frameInfo.framePoc = pc.pointee.output_picture_number
-                outputFrame!.frameInfo.width = pc.pointee.width_in_pixel
-                outputFrame!.frameInfo.height = pc.pointee.height_in_pixel
+                outputFrame!.frameInfo.width = pc.pointee.width
+                outputFrame!.frameInfo.height = pc.pointee.height
                 outputFrame!.frameInfo.fps = UInt16(self.frameRate)
-                outputFrame!.frameInfo.frameFlag.hasSPS = pc.pointee.frame_has_sps > 0
-                outputFrame!.frameInfo.frameFlag.hasPPS = pc.pointee.frame_has_pps > 0
                 outputFrame!.frameInfo.frameFlag.hasIDR = pc.pointee.key_frame == 1
                 outputFrame!.frameInfo.frameFlag.isFullRange = false
                 
                 // [TODO] 这个shouldVerifyVideoStream还有点问题
-                if outputFrame != nil && !self.shouldVerifyVideoStream {
+                if outputFrame != nil {
                     self.frameCounter = self.frameCounter + UInt32(1)
                     if self.delegate != nil {
                         self.delegate!.parser(self, didParseFrame: outputFrame!)
                     }
                 }
                 
-            } else {
-                // 释放资源
-                av_free_packet(&packet)
-                break
             }
-            
-            // 释放资源
-            av_free_packet(&packet)
-            
         }
-        
+        // 释放资源
+        av_packet_free(&packet)
+
         bufAddress.deallocate()
         self.parserLock.unlock()
     }

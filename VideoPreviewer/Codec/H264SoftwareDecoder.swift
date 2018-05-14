@@ -94,12 +94,6 @@ extension H264SoftwareDecoder {
         
         self.parser.free()
         
-        if self.frameInfoList != nil {
-            self.frameInfoList.deallocate()
-            self.frameInfoList = nil
-            self.frameInfoListCount = 0
-        }
-        
         if self.renderFrameBuffer != nil {
             for i in 0 ..< self.renderFrameBufferSize {
                 self.renderFrameBuffer[i].free()
@@ -133,31 +127,26 @@ extension H264SoftwareDecoder {
         packet.data = frame.frameData
         packet.size = Int32(frame.frameSize)
         
-        while packet.size > 0 {
-            if self.frameInfoListCount > frame.frameInfo.frameIndex {
-                let currentFrameIndex = Int(frame.frameInfo.frameIndex)
-                self.frameInfoList[currentFrameIndex] = frame
-            }
-            
-            var didGotPicture: Int32 = 0
+        var didGotPicture: Int32 = 0
+    
+        let ret = avcodec_send_packet(self.parser.codecContext, &packet)
         
-            let decodeLen = avcodec_decode_video2(self.parser.codecContext, self.pFrame, &didGotPicture, &packet)
-            
-            
-            if self.parser.codecContext.pointee.height == 1088 {
-                self.parser.codecContext.pointee.height = 1080
-            }
-            
-            block(didGotPicture > 0)
-            
-            if decodeLen < 0 {
-                break
-            }
-            
-            packet.size -= decodeLen
+        if ret < 0 {
+            block(false)
+            objc_sync_exit(self)
+            return
         }
         
-        av_free_packet(&packet)
+        didGotPicture = avcodec_receive_frame(self.parser.codecContext, self.pFrame)
+        
+        if self.parser.codecContext.pointee.height == 1088 {
+            self.parser.codecContext.pointee.height = 1080
+        }
+        
+        block(didGotPicture >= 0)
+        
+        
+        av_packet_unref(&packet)
         
         objc_sync_exit(self)
     }
@@ -192,6 +181,11 @@ extension H264SoftwareDecoder {
             yuvFrame.chromaB = UnsafeMutablePointer<UInt8>.allocate(capacity: inputWidth * inputWidth / 4)
             yuvFrame.chromaR = UnsafeMutablePointer<UInt8>.allocate(capacity: inputWidth * inputWidth / 4)
         }
+        
+        yuvFrame.lumaLineSize = Int(frame.pointee.linesize.0)
+        yuvFrame.chromaBLineSize = Int(frame.pointee.linesize.1)
+        yuvFrame.chromaRLineSize = Int(frame.pointee.linesize.2)
+        
         copyYUVFrame(dst: yuvFrame.luma,
                      src: self.pFrame.pointee.data.0!,
                      linesize: Int(frame.pointee.linesize.0),
@@ -217,13 +211,6 @@ extension H264SoftwareDecoder {
         yuvFrame.height = inputHeigth
         yuvFrame.frameUUID = H264_FRAME_INVAILED_UUID
         
-        // [TODO] 这个poc是什么
-        if frame.pointee.poc < self.frameInfoListCount {
-            let poc = Int(frame.pointee.poc)
-            yuvFrame.frameUUID = frameInfoList[poc].frameUUID
-            yuvFrame.frameInfo = frameInfoList[poc].frameInfo
-        }
-        
         objc_sync_exit(self)
     }
     
@@ -233,20 +220,7 @@ extension H264SoftwareDecoder {
 extension H264SoftwareDecoder: H264ParserDelegate {
     
     public func parserDidFoundSpsPps(_ parser: H264Parser) {
-        if self.frameInfoListCount != parser.codecParserContext.pointee.max_frame_num_plus1 {
-            // 重新创建 frame info list
-            if self.frameInfoList != nil {
-                self.frameInfoList.deallocate()
-                self.frameInfoList = nil
-            }
-            
-            if  parser.codecParserContext.pointee.max_frame_num_plus1 > 0 {
-                self.frameInfoListCount = Int(parser.codecParserContext.pointee.max_frame_num_plus1)
-                self.frameInfoList = UnsafeMutableBufferPointer<VideoFrame.H264>.allocate(capacity: MemoryLayout<VideoFrame.H264>.stride * self.frameInfoListCount)
-                memset(self.frameInfoList.baseAddress!, 0, self.frameInfoList.count)
-            }
-            
-        }
+        
     }
     
     public func parser(_ parser: H264Parser, didParseFrame frame: VideoFrame.H264) {
@@ -258,7 +232,42 @@ extension H264SoftwareDecoder: H264ParserDelegate {
                 // 注意这个对象内部有手动管理的内存
                 // [TODO] 看看&符号会不会发生拷贝
                 if self.pFrame.pointee.format == AV_PIX_FMT_YUV420P.rawValue {
+                    
+                    self.renderFrameBuffer[bufferIndex].frameInfo = frame.frameInfo
                     self.getYUV420P(from: self.pFrame, to: &self.renderFrameBuffer[bufferIndex])
+                    
+//                    let swCtx = sws_getContext(self.pFrame.pointee.width, self.pFrame.pointee.height, AV_PIX_FMT_YUV420P, self.pFrame.pointee.width, self.pFrame.pointee.height, AV_PIX_FMT_ARGB, SWS_BICUBIC, nil, nil, nil)
+//                    let destFrame = av_frame_alloc()!
+//
+//                    var l = self.pFrame.pointee.linesize
+//
+//                    let p = withUnsafeBytes(of: &l, { (ptr) -> UnsafePointer<UnsafePointer<UInt8>?> in
+//                        return ptr.baseAddress!.assumingMemoryBound(to: UnsafePointer<UInt8>?.self)
+//                    })
+//
+//                    var d = self.pFrame.pointee.data
+//
+//                    let dp = withUnsafeBytes(of: &d, { (ptr) -> UnsafePointer<Int32> in
+//                        return ptr.baseAddress!.assumingMemoryBound(to: Int32.self)
+//                    })
+//
+//                    var destData = destFrame.pointee.data
+//                    let destDataPtr = withUnsafeBytes(of: &destData, { (ptr) -> UnsafePointer<UnsafeMutablePointer<UInt8>?> in
+//                        return ptr.baseAddress!.assumingMemoryBound(to: UnsafeMutablePointer<UInt8>?.self)
+//                    })
+//
+//                    let destSizeLine = withUnsafeBytes(of: &destData, { (ptr) -> UnsafePointer<Int32> in
+//                        return ptr.baseAddress!.assumingMemoryBound(to: Int32.self)
+//                    })
+//
+//                    sws_scale(swCtx, p, dp, 0, self.pFrame.pointee.height, destDataPtr, destSizeLine)
+//
+//                    let ppp = pFrame.pointee.data
+//
+//                    #if DEBUG
+//                    dumpBitmap(toPath: "/Users/cmst0us/Desktop/output", width: frame.frameInfo.width, height: frame.frameInfo.height, linesize: destFrame.pointee.linesize.0, index: 0, data: destFrame.pointee.data.0)
+//                    #endif
+                    
                     if self.delegate != nil {
                         self.delegate?.decoder(self, didGotPicture: self.renderFrameBuffer[bufferIndex])
                     }
