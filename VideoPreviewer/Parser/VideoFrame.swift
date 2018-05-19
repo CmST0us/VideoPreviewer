@@ -220,26 +220,27 @@ public struct VideoFrame {
         
         public var width: Int = 0
         public var height: Int = 0
-        public var lineSize: Int = 0
-        public var data: UnsafeMutablePointer<UInt8>! = nil
+        public var lineSize: [Int] = []
+        public var data: [UnsafeMutablePointer<UInt8>?] = []
         
         public init() {
-            self.init(width: 0, height: 0, lineSize: 0)
+            self.init(width: 0, height: 0)
         }
         
-        public init(width: Int, height: Int, lineSize: Int) {
+        public init(width: Int, height: Int) {
             self.width = width
             self.height = height
-            self.lineSize = lineSize
         }
         
         public mutating func allocData() {
-            self.data = UnsafeMutablePointer<UInt8>.allocate(capacity: lineSize * height)
+            
         }
         
         public mutating func freeData() {
-            self.data.deallocate()
-            self.data = nil
+            self.data.forEach { (each) in
+                each?.deallocate()
+            }
+            self.data.removeAll()
         }
     }
     

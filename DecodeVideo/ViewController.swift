@@ -59,25 +59,41 @@ class ViewController: UIViewController {
 
 extension ViewController: H264SoftwareDecoderDelegate {
     func decoder(_ decoder: H264SoftwareDecoder, didGotPicture picture: VideoFrame.YUV) {
+        
+    }
+    
+    func decoder(_ decoder: H264SoftwareDecoder, didGotPicture picture: VideoFrame.PixelMap) {
         let w = Int(picture.width)
         let h = Int(picture.height)
-        let s = Int(picture.frameInfo.frameIndex)
+//        let s = Int(picture.frameInfo.frameIndex)
         self.frameCount += 1
         let mes = """
         fps (\(String(self.fps))) Frame got:
         w = \(String(w))
         h = \(String(h))
-        s = \(String(s))
         """
         print(mes)
-        if let cgImageUnmanaged = picture.getYUV420PCVImage() {
-            let cgImage = cgImageUnmanaged.takeRetainedValue()
-            let image = UIImage.init(cgImage: cgImage)
-            
-            DispatchQueue.main.async {
-                self.imageView.image = image
-            }
-        }
+        let ops = [
+            kCVPixelBufferCGImageCompatibilityKey: NSNumber.init(value: true),
+            kCVPixelBufferCGBitmapContextCompatibilityKey: NSNumber.init(value: true)
+        ]
+        var pixBuffer: CVPixelBuffer? = nil
+        let ret = CVPixelBufferCreate(kCFAllocatorDefault, picture.width, picture.height, kCVPixelFormatType_24RGB, ops as CFDictionary, &pixBuffer)
+        CVPixelBufferLockBaseAddress(pixBuffer!, CVPixelBufferLockFlags.init(rawValue: 0))
         
+        let dataAddr = CVPixelBufferGetBaseAddress(pixBuffer!)
+        
+        dataAddr?.copyMemory(from: picture.data[0]!, byteCount: picture.lineSize[0] * picture.height)
+        
+        CVPixelBufferUnlockBaseAddress(pixBuffer!, CVPixelBufferLockFlags.init(rawValue: 0))
+        let ci = CIImage.init(cvPixelBuffer: pixBuffer!)
+        let img = UIImage.init(ciImage: ci)
+        
+        
+        let frameInterval = 1 / 80.0
+        Thread.sleep(forTimeInterval: frameInterval)
+        DispatchQueue.main.async {
+            self.imageView.image = img
+        }
     }
 }

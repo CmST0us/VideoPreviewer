@@ -9,4 +9,9 @@ module ffmpeg {
         link "swscale"
         export *
     }
+    module avutil {
+        header "include/libavutil/imgutils.h"
+        link "avutil"
+        export *
+    }
 }

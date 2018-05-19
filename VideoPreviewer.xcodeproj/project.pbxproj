@@ -137,7 +137,6 @@
 		4F208C4A20A957C6003433A4 /* libbz2.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F208C4920A957C6003433A4 /* libbz2.tbd */; };
 		4F208C4B20A957D1003433A4 /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F113F1B20A6B30B00BB0FAB /* libz.tbd */; };
 		4F208C4C20A957F2003433A4 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F208C3C20A956C7003433A4 /* AudioToolbox.framework */; };
-		4F208C4F20A99226003433A4 /* FFmpegConversion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F208C4E20A99226003433A4 /* FFmpegConversion.swift */; };
 		4FA550B120A8A0C100DA81BD /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FA550B020A8A0C100DA81BD /* AppDelegate.swift */; };
 		4FA550B320A8A0C100DA81BD /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FA550B220A8A0C100DA81BD /* ViewController.swift */; };
 		4FA550B620A8A0C100DA81BD /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 4FA550B420A8A0C100DA81BD /* Main.storyboard */; };
@@ -1029,7 +1028,6 @@
 				4F113F2120A70C6700BB0FAB /* H264SoftwareDecoder.swift in Sources */,
 				4FCBA97920A57EA70073C605 /* VideoPreviewerAsyncCommandQueue.swift in Sources */,
 				4FCBA98520A5D3F50073C605 /* H264Parser.swift in Sources */,
-				4F208C4F20A99226003433A4 /* FFmpegConversion.swift in Sources */,
 				4FCBA97B20A57F950073C605 /* VideoPreviewerAsyncCommand.swift in Sources */,
 				4FCBA98720A5D52C0073C605 /* VideoFrame.swift in Sources */,
 				4FF66F5620A57A690083DB0A /* MovieGLView.swift in Sources */,

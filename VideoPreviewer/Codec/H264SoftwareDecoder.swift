@@ -11,6 +11,7 @@ import ffmpeg
 
 public protocol H264SoftwareDecoderDelegate {
     func decoder(_ decoder: H264SoftwareDecoder, didGotPicture picture: VideoFrame.YUV)
+    func decoder(_ decoder: H264SoftwareDecoder, didGotPicture picture: VideoFrame.PixelMap)
 }
 
 /// 使用ffmpeg的H264解码器
@@ -236,41 +237,48 @@ extension H264SoftwareDecoder: H264ParserDelegate {
                     self.renderFrameBuffer[bufferIndex].frameInfo = frame.frameInfo
                     self.getYUV420P(from: self.pFrame, to: &self.renderFrameBuffer[bufferIndex])
                     
-//                    let swCtx = sws_getContext(self.pFrame.pointee.width, self.pFrame.pointee.height, AV_PIX_FMT_YUV420P, self.pFrame.pointee.width, self.pFrame.pointee.height, AV_PIX_FMT_ARGB, SWS_BICUBIC, nil, nil, nil)
-//                    let destFrame = av_frame_alloc()!
-//
-//                    var l = self.pFrame.pointee.linesize
-//
-//                    let p = withUnsafeBytes(of: &l, { (ptr) -> UnsafePointer<UnsafePointer<UInt8>?> in
-//                        return ptr.baseAddress!.assumingMemoryBound(to: UnsafePointer<UInt8>?.self)
-//                    })
-//
-//                    var d = self.pFrame.pointee.data
-//
-//                    let dp = withUnsafeBytes(of: &d, { (ptr) -> UnsafePointer<Int32> in
-//                        return ptr.baseAddress!.assumingMemoryBound(to: Int32.self)
-//                    })
-//
-//                    var destData = destFrame.pointee.data
-//                    let destDataPtr = withUnsafeBytes(of: &destData, { (ptr) -> UnsafePointer<UnsafeMutablePointer<UInt8>?> in
-//                        return ptr.baseAddress!.assumingMemoryBound(to: UnsafeMutablePointer<UInt8>?.self)
-//                    })
-//
-//                    let destSizeLine = withUnsafeBytes(of: &destData, { (ptr) -> UnsafePointer<Int32> in
-//                        return ptr.baseAddress!.assumingMemoryBound(to: Int32.self)
-//                    })
-//
-//                    sws_scale(swCtx, p, dp, 0, self.pFrame.pointee.height, destDataPtr, destSizeLine)
-//
-//                    let ppp = pFrame.pointee.data
-//
-//                    #if DEBUG
-//                    dumpBitmap(toPath: "/Users/cmst0us/Desktop/output", width: frame.frameInfo.width, height: frame.frameInfo.height, linesize: destFrame.pointee.linesize.0, index: 0, data: destFrame.pointee.data.0)
-//                    #endif
+                    let swCtx = sws_getContext(self.pFrame.pointee.width, self.pFrame.pointee.height, AV_PIX_FMT_YUV420P, self.pFrame.pointee.width, self.pFrame.pointee.height, AV_PIX_FMT_RGB24, SWS_BICUBIC, nil, nil, nil)
                     
-                    if self.delegate != nil {
-                        self.delegate?.decoder(self, didGotPicture: self.renderFrameBuffer[bufferIndex])
+                    var destFrame = av_frame_alloc()
+                    
+                    let pFrameData = withUnsafeBytes(of: &self.pFrame.pointee.data, { (ptr) -> UnsafePointer<UnsafePointer<UInt8>?> in
+                        return ptr.baseAddress!.assumingMemoryBound(to: UnsafePointer<UInt8>?.self)
+                    })
+                    
+                    let pFrameSizeLine = withUnsafeMutableBytes(of: &self.pFrame.pointee.linesize, { (ptr) -> UnsafeMutablePointer<Int32> in
+                        return ptr.baseAddress!.assumingMemoryBound(to: Int32.self)
+                    })
+                    
+                    let destFrameData = withUnsafeMutableBytes(of: &destFrame!.pointee.data, { (ptr) -> UnsafeMutablePointer<UnsafeMutablePointer<UInt8>?> in
+                        return ptr.baseAddress!.assumingMemoryBound(to: UnsafeMutablePointer<UInt8>?.self)
+                    })
+                    
+                    let destFrameSizeLine = withUnsafeMutableBytes(of: &destFrame!.pointee.linesize, { (ptr) -> UnsafeMutablePointer<Int32> in
+                        return ptr.baseAddress!.assumingMemoryBound(to: Int32.self)
+                    })
+                    
+                    av_image_alloc(destFrameData, destFrameSizeLine, self.pFrame.pointee.width, self.pFrame.pointee.height, AV_PIX_FMT_RGB24, 1)
+                    
+                    let ret = sws_scale(swCtx, pFrameData, pFrameSizeLine, 0, self.pFrame.pointee.height, destFrameData, destFrameSizeLine)
+
+
+                    #if DEBUG
+//                    dumpBitmap(toPath: "/Users/cmst0us/Desktop/output", width: Int(frame.frameInfo.width), height: Int(frame.frameInfo.height), linesize: Int(destFrame!.pointee.linesize.0), index: 0, data: destFrame!.pointee.data.0!)
+                    #endif
+                    
+                    var pixmap = VideoFrame.PixelMap(width: Int(self.pFrame.pointee.width), height: Int(self.pFrame.pointee.height))
+                    
+                    pixmap.data.append(destFrame!.pointee.data.0)
+                    pixmap.lineSize.append(Int(destFrame!.pointee.linesize.0))
+                    
+                    if self.delegate != nil && ret > 0 {
+//                        self.delegate?.decoder(self, didGotPicture: self.renderFrameBuffer[bufferIndex])
+                        self.delegate?.decoder(self, didGotPicture: pixmap)
                     }
+                    
+                    av_freep(destFrameData)
+                    sws_freeContext(swCtx!)
+                    
                     bufferIndex = (bufferIndex + 1) % self.renderFrameBufferSize
                 }
             }
